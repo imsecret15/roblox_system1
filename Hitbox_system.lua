@@ -29,16 +29,9 @@ local function createHitbox(target)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = false
+	hitbox.Anchored = true
 	hitbox.Massless = true
-	hitbox.Parent = char
-
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = hitbox
-	weld.Part1 = root
-	weld.Parent = hitbox
-
-	hitbox.CFrame = root.CFrame
+	hitbox.Parent = workspace
 
 	Hitboxes[target] = hitbox
 
@@ -50,60 +43,61 @@ end
 
 local function removeHitbox(target)
 
-	if Hitboxes[target] then
-		Hitboxes[target]:Destroy()
+	local box = Hitboxes[target]
+
+	if box then
+		box:Destroy()
 		Hitboxes[target] = nil
 	end
 
 end
 
 --------------------------------------------------
--- UPDATE LOOP
+-- MAIN LOOP
 --------------------------------------------------
 
 RunService.Heartbeat:Connect(function()
 
-	if Settings.Enabled then
-
-		for _,v in pairs(Players:GetPlayers()) do
-			createHitbox(v)
-		end
+	if not Settings.Enabled then
 
 		for plr,box in pairs(Hitboxes) do
+			if box then
+				box:Destroy()
+			end
+		end
 
-			if box and box.Parent then
+		table.clear(Hitboxes)
+		return
+	end
+
+	for _,plr in pairs(Players:GetPlayers()) do
+
+		if plr ~= player then
+
+			createHitbox(plr)
+
+			local char = plr.Character
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			local box = Hitboxes[plr]
+
+			if root and box then
+
+				box.CFrame = root.CFrame
 				box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
 				box.Transparency = Settings.Visible and 0.3 or 1
+
 			end
 
 		end
 
-	else
-
-	for plr,box in pairs(Hitboxes) do
-		if box then
-			box:Destroy()
-		end
 	end
-
-	table.clear(Hitboxes)
-
-end
 
 end)
 
 --------------------------------------------------
--- PLAYER JOIN SUPPORT
+-- PLAYER JOIN
 --------------------------------------------------
 
-Players.PlayerAdded:Connect(function(plr)
-
-	plr.CharacterAdded:Connect(function()
-		task.wait(0.5)
-
-		if Settings.Enabled then
-			createHitbox(plr)
-		end
-	end)
-
+Players.PlayerRemoving:Connect(function(plr)
+	removeHitbox(plr)
 end)
