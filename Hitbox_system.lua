@@ -29,7 +29,7 @@ local function createHitbox(target)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = true
+	hitbox.Anchored = false
 	hitbox.Massless = true
 	hitbox.Parent = char
 
@@ -80,11 +80,15 @@ RunService.Heartbeat:Connect(function()
 
 	else
 
-		for plr,_ in pairs(Hitboxes) do
-			removeHitbox(plr)
+	for plr,box in pairs(Hitboxes) do
+		if box then
+			box:Destroy()
 		end
-
 	end
+
+	table.clear(Hitboxes)
+
+end
 
 end)
 
