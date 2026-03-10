@@ -82,7 +82,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_sys
 --------------------------------------------------
 
 local mainGui = Instance.new("ScreenGui")
-mainGui.Parent = game.CoreGui
+mainGui.Parent = player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
 -- LEFT OPEN BUTTON
