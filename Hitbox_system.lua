@@ -25,15 +25,17 @@ local function createHitbox(plr)
 	if not head then return end
 
 	local hitbox = Instance.new("Part")
-	hitbox.Name = "ExtraHitbox"
+	hitbox.Name = "Head"
 	hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 	hitbox.Color = Color3.fromRGB(255,0,0)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = true
-	hitbox.Massless = true
-	hitbox.Parent = char
+    hitbox.Anchored = true
+    hitbox.Massless = true
+    hitbox.Parent = char
+
+    hitbox:SetAttribute("OriginalPart","Head")
 
 	hitbox.CFrame = head.CFrame
     RunService.RenderStepped:Connect(function()
