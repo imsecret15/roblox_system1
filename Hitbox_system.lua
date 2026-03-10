@@ -29,9 +29,16 @@ local function createHitbox(target)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = true
+	hitbox.Anchored = false
 	hitbox.Massless = true
-	hitbox.Parent = workspace
+	hitbox.Parent = char
+
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = hitbox
+	weld.Part1 = root
+	weld.Parent = hitbox
+
+	hitbox.CFrame = root.CFrame
 
 	Hitboxes[target] = hitbox
 
@@ -60,13 +67,10 @@ RunService.Heartbeat:Connect(function()
 
 	if not Settings.Enabled then
 
-		for plr,box in pairs(Hitboxes) do
-			if box then
-				box:Destroy()
-			end
+		for plr,_ in pairs(Hitboxes) do
+			removeHitbox(plr)
 		end
 
-		table.clear(Hitboxes)
 		return
 	end
 
@@ -76,16 +80,11 @@ RunService.Heartbeat:Connect(function()
 
 			createHitbox(plr)
 
-			local char = plr.Character
-			local root = char and char:FindFirstChild("HumanoidRootPart")
 			local box = Hitboxes[plr]
 
-			if root and box then
-
-				box.CFrame = root.CFrame
+			if box then
 				box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
 				box.Transparency = Settings.Visible and 0.3 or 1
-
 			end
 
 		end
@@ -95,8 +94,20 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN
+-- PLAYER JOIN / RESPAWN
 --------------------------------------------------
+
+Players.PlayerAdded:Connect(function(plr)
+
+	plr.CharacterAdded:Connect(function()
+		task.wait(0.5)
+
+		if Settings.Enabled then
+			createHitbox(plr)
+		end
+	end)
+
+end)
 
 Players.PlayerRemoving:Connect(function(plr)
 	removeHitbox(plr)
