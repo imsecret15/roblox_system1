@@ -58,6 +58,16 @@ local AimPart = "Head" -- Head or Body
 local CircleSize = 60
 
 --------------------------------------------------
+-- HITBOX SETTINGS
+--------------------------------------------------
+
+shared.HitboxSettings = {
+	Enabled = false,
+	Visible = true,
+	Size = 8
+}
+
+--------------------------------------------------
 -- BOW MODE
 --------------------------------------------------
 
