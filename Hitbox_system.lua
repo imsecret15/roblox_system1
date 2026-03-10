@@ -1,12 +1,12 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
-local StoredSizes = {}
+local Stored = {}
+local Enabled = false
 
 local Parts = {
 	Head = true,
@@ -16,23 +16,23 @@ local Parts = {
 }
 
 --------------------------------------------------
--- SAVE ORIGINAL SIZES
+-- STORE ORIGINAL SIZES
 --------------------------------------------------
 
-local function storeSizes(plr)
+local function store(plr)
 
 	local char = plr.Character
 	if not char then return end
 
-	if not StoredSizes[plr] then
-		StoredSizes[plr] = {}
+	if not Stored[plr] then
+		Stored[plr] = {}
 	end
 
 	for name,_ in pairs(Parts) do
 		local part = char:FindFirstChild(name)
 
-		if part and not StoredSizes[plr][name] then
-			StoredSizes[plr][name] = part.Size
+		if part and not Stored[plr][name] then
+			Stored[plr][name] = part.Size
 		end
 	end
 
@@ -42,20 +42,22 @@ end
 -- APPLY HITBOX
 --------------------------------------------------
 
-local function applyHitbox(plr)
+local function apply(plr)
+
+	if plr == player then return end
 
 	local char = plr.Character
 	if not char then return end
 
-	storeSizes(plr)
+	store(plr)
 
-	for name,_ in pairs(Parts) do
+	for name,size in pairs(Stored[plr]) do
 
 		local part = char:FindFirstChild(name)
 
-		if part and StoredSizes[plr][name] then
+		if part then
 
-			part.Size = StoredSizes[plr][name] + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Size = size + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Color = Color3.fromRGB(255,0,0)
 			part.Material = Enum.Material.Neon
 			part.Transparency = Settings.Visible and 0.3 or 1
@@ -71,14 +73,14 @@ end
 -- RESET HITBOX
 --------------------------------------------------
 
-local function resetHitbox(plr)
+local function reset(plr)
 
 	local char = plr.Character
 	if not char then return end
 
-	if not StoredSizes[plr] then return end
+	if not Stored[plr] then return end
 
-	for name,size in pairs(StoredSizes[plr]) do
+	for name,size in pairs(Stored[plr]) do
 
 		local part = char:FindFirstChild(name)
 
@@ -93,21 +95,44 @@ local function resetHitbox(plr)
 end
 
 --------------------------------------------------
--- MAIN LOOP
+-- ENABLE / DISABLE
 --------------------------------------------------
 
-RunService.Heartbeat:Connect(function()
+local function enable()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-
 		if plr ~= player then
+			apply(plr)
+		end
+	end
 
-			if Settings.Enabled then
-				applyHitbox(plr)
-			else
-				resetHitbox(plr)
-			end
+end
 
+local function disable()
+
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr ~= player then
+			reset(plr)
+		end
+	end
+
+end
+
+--------------------------------------------------
+-- SETTINGS WATCHER
+--------------------------------------------------
+
+task.spawn(function()
+
+	while true do
+		task.wait(0.2)
+
+		if Settings.Enabled and not Enabled then
+			enable()
+			Enabled = true
+		elseif not Settings.Enabled and Enabled then
+			disable()
+			Enabled = false
 		end
 
 	end
@@ -115,7 +140,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- PLAYER RESPAWN SUPPORT
+-- PLAYER RESPAWN
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
@@ -125,7 +150,7 @@ Players.PlayerAdded:Connect(function(plr)
 		task.wait(0.5)
 
 		if Settings.Enabled then
-			applyHitbox(plr)
+			apply(plr)
 		end
 
 	end)
@@ -137,5 +162,5 @@ end)
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	StoredSizes[plr] = nil
+	Stored[plr] = nil
 end)
