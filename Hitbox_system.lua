@@ -1,6 +1,7 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
@@ -31,20 +32,38 @@ local function createHitbox(plr)
 	hitbox.Transparency = Settings.Visible and 0.35 or 1
 
 	hitbox.CanCollide = false
-	hitbox.Anchored = false
+	hitbox.Anchored = true
 	hitbox.Massless = true
-	hitbox.Parent = char
 
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = hitbox
-	weld.Part1 = head
-	weld.Parent = hitbox
-
-	hitbox.CFrame = head.CFrame
+	hitbox.Parent = workspace
 
 	Hitboxes[plr] = hitbox
 
 end
+
+--------------------------------------------------
+-- FOLLOW HEAD
+--------------------------------------------------
+
+RunService.RenderStepped:Connect(function()
+
+	if not Enabled then return end
+
+	for plr,hitbox in pairs(Hitboxes) do
+
+		local char = plr.Character
+		if not char then continue end
+
+		local head = char:FindFirstChild("Head")
+		if not head then continue end
+
+		hitbox.CFrame = head.CFrame
+		hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		hitbox.Transparency = Settings.Visible and 0.35 or 1
+
+	end
+
+end)
 
 --------------------------------------------------
 -- REMOVE HITBOX
