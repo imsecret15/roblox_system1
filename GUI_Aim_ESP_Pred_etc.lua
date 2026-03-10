@@ -1,4 +1,4 @@
--- Aimlock Script
+-- GUI_Aim_ESP_Pred_etc.lua
 -- Hold RIGHT MOUSE BUTTON to aimlock on closest player's head
 
 local Players = game:GetService("Players")
@@ -56,6 +56,26 @@ local AimPart = "Head" -- Head or Body
 --------------------------------------------------
 
 local CircleSize = 60
+
+--------------------------------------------------
+-- HITBOX SETTINGS
+--------------------------------------------------
+
+local HitboxEnabled = false
+local HitboxVisible = true
+local HitboxSize = 8
+
+--------------------------------------------------
+-- BOW MODE
+--------------------------------------------------
+
+local BowMode = false
+
+--------------------------------------------------
+-- LOAD HITBOX SYSTEM
+--------------------------------------------------
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/Hitbox_system.lua"))()
 
 --------------------------------------------------
 -- MAIN GUI
@@ -284,6 +304,81 @@ circleSizeBox.Parent = circleSizeFrame
 
 local circleBoxCorner = Instance.new("UICorner")
 circleBoxCorner.Parent = circleSizeBox
+
+--------------------------------------------------
+-- HITBOX TOGGLE BUTTON
+--------------------------------------------------
+
+local hitboxButton = Instance.new("TextButton")
+hitboxButton.Size = UDim2.new(1,-10,0,35)
+hitboxButton.Text = "Hitbox : OFF"
+hitboxButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+hitboxButton.TextColor3 = Color3.new(1,1,1)
+hitboxButton.Parent = scrollFrame
+
+local hitboxCorner = Instance.new("UICorner")
+hitboxCorner.Parent = hitboxButton
+
+--------------------------------------------------
+-- HITBOX VISIBILITY BUTTON
+--------------------------------------------------
+
+local hitboxVisibleButton = Instance.new("TextButton")
+hitboxVisibleButton.Size = UDim2.new(1,-10,0,35)
+hitboxVisibleButton.Text = "Hitbox Visible : ON"
+hitboxVisibleButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+hitboxVisibleButton.TextColor3 = Color3.new(1,1,1)
+hitboxVisibleButton.Parent = scrollFrame
+
+local visibleCorner = Instance.new("UICorner")
+visibleCorner.Parent = hitboxVisibleButton
+
+--------------------------------------------------
+-- HITBOX SIZE SETTING
+--------------------------------------------------
+
+local hitboxSizeFrame = Instance.new("Frame")
+hitboxSizeFrame.Size = UDim2.new(1,-10,0,35)
+hitboxSizeFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+hitboxSizeFrame.Parent = scrollFrame
+
+local hitboxFrameCorner = Instance.new("UICorner")
+hitboxFrameCorner.Parent = hitboxSizeFrame
+
+local hitboxSizeLabel = Instance.new("TextLabel")
+hitboxSizeLabel.Size = UDim2.new(0.6,0,1,0)
+hitboxSizeLabel.BackgroundTransparency = 1
+hitboxSizeLabel.Text = "Hitbox Size:"
+hitboxSizeLabel.TextColor3 = Color3.new(1,1,1)
+hitboxSizeLabel.TextScaled = true
+hitboxSizeLabel.Parent = hitboxSizeFrame
+
+local hitboxSizeBox = Instance.new("TextBox")
+hitboxSizeBox.Size = UDim2.new(0.4,-5,0.8,0)
+hitboxSizeBox.Position = UDim2.new(0.6,5,0.1,0)
+hitboxSizeBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+hitboxSizeBox.TextColor3 = Color3.new(1,1,1)
+hitboxSizeBox.Text = tostring(HitboxSize)
+hitboxSizeBox.TextScaled = true
+hitboxSizeBox.ClearTextOnFocus = false
+hitboxSizeBox.Parent = hitboxSizeFrame
+
+local hitboxSizeCorner = Instance.new("UICorner")
+hitboxSizeCorner.Parent = hitboxSizeBox
+
+--------------------------------------------------
+-- BOW MODE BUTTON
+--------------------------------------------------
+
+local bowButton = Instance.new("TextButton")
+bowButton.Size = UDim2.new(1,-10,0,35)
+bowButton.Text = "Bow Mode : OFF"
+bowButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+bowButton.TextColor3 = Color3.new(1,1,1)
+bowButton.Parent = scrollFrame
+
+local bowCorner = Instance.new("UICorner")
+bowCorner.Parent = bowButton
 
 --------------------------------------------------
 -- CLOSE BUTTON
@@ -563,6 +658,71 @@ circleButton.MouseButton1Click:Connect(function()
 	else
 		circle.Visible = false
 		circleButton.Text = "Aim Circle : OFF"
+	end
+
+end)
+
+--------------------------------------------------
+-- HITBOX TOGGLE
+--------------------------------------------------
+
+hitboxButton.MouseButton1Click:Connect(function()
+
+	HitboxEnabled = not HitboxEnabled
+
+	if HitboxEnabled then
+		hitboxButton.Text = "Hitbox : ON"
+	else
+		hitboxButton.Text = "Hitbox : OFF"
+	end
+
+end)
+
+--------------------------------------------------
+-- HITBOX VISIBILITY TOGGLE
+--------------------------------------------------
+
+hitboxVisibleButton.MouseButton1Click:Connect(function()
+
+	HitboxVisible = not HitboxVisible
+
+	if HitboxVisible then
+		hitboxVisibleButton.Text = "Hitbox Visible : ON"
+	else
+		hitboxVisibleButton.Text = "Hitbox Visible : OFF"
+	end
+
+end)
+
+--------------------------------------------------
+-- HITBOX SIZE UPDATE
+--------------------------------------------------
+
+hitboxSizeBox.FocusLost:Connect(function()
+
+	local value = tonumber(hitboxSizeBox.Text)
+
+	if value then
+		HitboxSize = value
+		hitboxSizeBox.Text = tostring(HitboxSize)
+	else
+		hitboxSizeBox.Text = tostring(HitboxSize)
+	end
+
+end)
+
+--------------------------------------------------
+-- BOW MODE TOGGLE
+--------------------------------------------------
+
+bowButton.MouseButton1Click:Connect(function()
+
+	BowMode = not BowMode
+
+	if BowMode then
+		bowButton.Text = "Bow Mode : ON"
+	else
+		bowButton.Text = "Bow Mode : OFF"
 	end
 
 end)
