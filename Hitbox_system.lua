@@ -1,138 +1,91 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
-local Stored = {}
-local Enabled = false
-
-local Parts = {
-	Head = true,
-	UpperTorso = true,
-	LowerTorso = true,
-	Torso = true
-}
+local Hitboxes = {}
 
 --------------------------------------------------
--- STORE ORIGINAL SIZES
+-- CREATE HITBOX
 --------------------------------------------------
 
-local function store(plr)
+local function createHitbox(plr)
 
-	local char = plr.Character
-	if not char then return end
-
-	if not Stored[plr] then
-		Stored[plr] = {}
-	end
-
-	for name,_ in pairs(Parts) do
-		local part = char:FindFirstChild(name)
-
-		if part and not Stored[plr][name] then
-			Stored[plr][name] = part.Size
-		end
-	end
-
-end
-
---------------------------------------------------
--- APPLY HITBOX
---------------------------------------------------
-
-local function apply(plr)
-
+	if not Settings.Enabled then return end
 	if plr == player then return end
+	if Hitboxes[plr] then return end
 
 	local char = plr.Character
 	if not char then return end
 
-	store(plr)
+	local head = char:FindFirstChild("Head")
+	if not head then return end
 
-	for name,size in pairs(Stored[plr]) do
+	local hitbox = Instance.new("Part")
+	hitbox.Name = "ExtraHitbox"
+	hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	hitbox.Color = Color3.fromRGB(255,0,0)
+	hitbox.Material = Enum.Material.Neon
+	hitbox.Transparency = Settings.Visible and 0.3 or 1
+	hitbox.CanCollide = false
+	hitbox.Anchored = false
+	hitbox.Massless = true
+	hitbox.Parent = char
 
-		local part = char:FindFirstChild(name)
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = hitbox
+	weld.Part1 = head
+	weld.Parent = hitbox
 
-		if part then
+	hitbox.CFrame = head.CFrame
 
-			part.Size = size + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			part.Color = Color3.fromRGB(255,0,0)
-			part.Material = Enum.Material.Neon
-			part.Transparency = Settings.Visible and 0.3 or 1
-			part.CanCollide = false
+	Hitboxes[plr] = hitbox
 
-		end
+end
 
+--------------------------------------------------
+-- REMOVE HITBOX
+--------------------------------------------------
+
+local function removeHitbox(plr)
+
+	local box = Hitboxes[plr]
+
+	if box then
+		box:Destroy()
+		Hitboxes[plr] = nil
 	end
 
 end
 
 --------------------------------------------------
--- RESET HITBOX
+-- UPDATE LOOP
 --------------------------------------------------
 
-local function reset(plr)
-
-	local char = plr.Character
-	if not char then return end
-
-	if not Stored[plr] then return end
-
-	for name,size in pairs(Stored[plr]) do
-
-		local part = char:FindFirstChild(name)
-
-		if part then
-			part.Size = size
-			part.Transparency = 0
-			part.Material = Enum.Material.Plastic
-		end
-
-	end
-
-end
-
---------------------------------------------------
--- ENABLE / DISABLE
---------------------------------------------------
-
-local function enable()
+RunService.Heartbeat:Connect(function()
 
 	for _,plr in pairs(Players:GetPlayers()) do
+
 		if plr ~= player then
-			apply(plr)
-		end
-	end
 
-end
+			if Settings.Enabled then
 
-local function disable()
+				createHitbox(plr)
 
-	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player then
-			reset(plr)
-		end
-	end
+				local box = Hitboxes[plr]
 
-end
+				if box then
+					box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+					box.Transparency = Settings.Visible and 0.3 or 1
+				end
 
---------------------------------------------------
--- SETTINGS WATCHER
---------------------------------------------------
+			else
+				removeHitbox(plr)
+			end
 
-task.spawn(function()
-
-	while true do
-		task.wait(0.2)
-
-		if Settings.Enabled and not Enabled then
-			enable()
-			Enabled = true
-		elseif not Settings.Enabled and Enabled then
-			disable()
-			Enabled = false
 		end
 
 	end
@@ -140,7 +93,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER RESPAWN
+-- RESPAWN SUPPORT
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
@@ -150,7 +103,7 @@ Players.PlayerAdded:Connect(function(plr)
 		task.wait(0.5)
 
 		if Settings.Enabled then
-			apply(plr)
+			createHitbox(plr)
 		end
 
 	end)
@@ -162,5 +115,5 @@ end)
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	Stored[plr] = nil
+	removeHitbox(plr)
 end)
