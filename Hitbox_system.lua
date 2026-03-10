@@ -7,6 +7,8 @@ local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
 local OriginalSizes = {}
+local ModifiedPlayers = {}
+
 local PartsToExpand = {
 	Head = true,
 	UpperTorso = true,
@@ -18,16 +20,17 @@ local PartsToExpand = {
 -- APPLY HITBOX
 --------------------------------------------------
 
-local function applyHitbox(target)
+local function applyHitbox(plr)
 
-	if target == player then return end
+	if plr == player then return end
+	if ModifiedPlayers[plr] then return end
 
-	local char = target.Character
+	local char = plr.Character
 	if not char then return end
 
-	for partName,_ in pairs(PartsToExpand) do
+	for name,_ in pairs(PartsToExpand) do
 
-		local part = char:FindFirstChild(partName)
+		local part = char:FindFirstChild(name)
 
 		if part then
 
@@ -35,7 +38,7 @@ local function applyHitbox(target)
 				OriginalSizes[part] = part.Size
 			end
 
-			part.Size = OriginalSizes[part] + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Size = part.Size + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Color = Color3.fromRGB(255,0,0)
 			part.Material = Enum.Material.Neon
 			part.Transparency = Settings.Visible and 0.3 or 1
@@ -45,20 +48,22 @@ local function applyHitbox(target)
 
 	end
 
+	ModifiedPlayers[plr] = true
+
 end
 
 --------------------------------------------------
 -- RESET HITBOX
 --------------------------------------------------
 
-local function resetHitbox(target)
+local function resetHitbox(plr)
 
-	local char = target.Character
+	local char = plr.Character
 	if not char then return end
 
-	for partName,_ in pairs(PartsToExpand) do
+	for name,_ in pairs(PartsToExpand) do
 
-		local part = char:FindFirstChild(partName)
+		local part = char:FindFirstChild(name)
 
 		if part and OriginalSizes[part] then
 
@@ -69,6 +74,8 @@ local function resetHitbox(target)
 		end
 
 	end
+
+	ModifiedPlayers[plr] = nil
 
 end
 
@@ -99,10 +106,5 @@ end)
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	-- clear stored sizes
-	for part,_ in pairs(OriginalSizes) do
-		if part.Parent == nil then
-			OriginalSizes[part] = nil
-		end
-	end
+	ModifiedPlayers[plr] = nil
 end)
