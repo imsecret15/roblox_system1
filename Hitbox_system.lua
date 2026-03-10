@@ -1,12 +1,12 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
 local Hitboxes = {}
+local Enabled = false
 
 --------------------------------------------------
 -- CREATE HITBOX
@@ -14,7 +14,6 @@ local Hitboxes = {}
 
 local function createHitbox(plr)
 
-	if not Settings.Enabled then return end
 	if plr == player then return end
 	if Hitboxes[plr] then return end
 
@@ -62,30 +61,48 @@ local function removeHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE LOOP
+-- ENABLE HITBOX
 --------------------------------------------------
 
-RunService.Heartbeat:Connect(function()
+local function enableHitbox()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-
 		if plr ~= player then
+			createHitbox(plr)
+		end
+	end
 
-			if Settings.Enabled then
+end
 
-				createHitbox(plr)
+--------------------------------------------------
+-- DISABLE HITBOX
+--------------------------------------------------
 
-				local box = Hitboxes[plr]
+local function disableHitbox()
 
-				if box then
-					box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-					box.Transparency = Settings.Visible and 0.3 or 1
-				end
+	for plr,_ in pairs(Hitboxes) do
+		removeHitbox(plr)
+	end
 
-			else
-				removeHitbox(plr)
-			end
+end
 
+--------------------------------------------------
+-- SETTINGS WATCHER
+--------------------------------------------------
+
+task.spawn(function()
+
+	while true do
+
+		task.wait(0.2)
+
+		if Settings.Enabled and not Enabled then
+			enableHitbox()
+			Enabled = true
+
+		elseif not Settings.Enabled and Enabled then
+			disableHitbox()
+			Enabled = false
 		end
 
 	end
@@ -93,7 +110,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- RESPAWN SUPPORT
+-- PLAYER JOIN
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
