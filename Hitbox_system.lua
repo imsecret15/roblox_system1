@@ -60,25 +60,6 @@ RunService.RenderStepped:Connect(function()
 
 		local head = char:FindFirstChild("Head")
 		if not head then continue end
-        RunService.RenderStepped:Connect(function()
-
-	if not Enabled then return end
-
-	for plr,hitbox in pairs(Hitboxes) do
-
-		local char = plr.Character
-		if not char then continue end
-
-		local head = char:FindFirstChild("Head")
-		if not head then continue end
-
-		hitbox.CFrame = head.CFrame
-		hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-		hitbox.Transparency = Settings.Visible and 0.35 or 1
-
-	end
-
-end)
 
 		hitbox.CFrame = head.CFrame
 		hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
