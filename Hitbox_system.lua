@@ -6,10 +6,9 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
-local OriginalSizes = {}
-local ModifiedPlayers = {}
+local StoredSizes = {}
 
-local PartsToExpand = {
+local Parts = {
 	Head = true,
 	UpperTorso = true,
 	LowerTorso = true,
@@ -17,28 +16,46 @@ local PartsToExpand = {
 }
 
 --------------------------------------------------
+-- SAVE ORIGINAL SIZES
+--------------------------------------------------
+
+local function storeSizes(plr)
+
+	local char = plr.Character
+	if not char then return end
+
+	if not StoredSizes[plr] then
+		StoredSizes[plr] = {}
+	end
+
+	for name,_ in pairs(Parts) do
+		local part = char:FindFirstChild(name)
+
+		if part and not StoredSizes[plr][name] then
+			StoredSizes[plr][name] = part.Size
+		end
+	end
+
+end
+
+--------------------------------------------------
 -- APPLY HITBOX
 --------------------------------------------------
 
 local function applyHitbox(plr)
 
-	if plr == player then return end
-	if ModifiedPlayers[plr] then return end
-
 	local char = plr.Character
 	if not char then return end
 
-	for name,_ in pairs(PartsToExpand) do
+	storeSizes(plr)
+
+	for name,_ in pairs(Parts) do
 
 		local part = char:FindFirstChild(name)
 
-		if part then
+		if part and StoredSizes[plr][name] then
 
-			if not OriginalSizes[part] then
-				OriginalSizes[part] = part.Size
-			end
-
-			part.Size = part.Size + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Size = StoredSizes[plr][name] + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Color = Color3.fromRGB(255,0,0)
 			part.Material = Enum.Material.Neon
 			part.Transparency = Settings.Visible and 0.3 or 1
@@ -47,8 +64,6 @@ local function applyHitbox(plr)
 		end
 
 	end
-
-	ModifiedPlayers[plr] = true
 
 end
 
@@ -61,21 +76,19 @@ local function resetHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	for name,_ in pairs(PartsToExpand) do
+	if not StoredSizes[plr] then return end
+
+	for name,size in pairs(StoredSizes[plr]) do
 
 		local part = char:FindFirstChild(name)
 
-		if part and OriginalSizes[part] then
-
-			part.Size = OriginalSizes[part]
+		if part then
+			part.Size = size
 			part.Transparency = 0
 			part.Material = Enum.Material.Plastic
-
 		end
 
 	end
-
-	ModifiedPlayers[plr] = nil
 
 end
 
@@ -102,9 +115,27 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
+-- PLAYER RESPAWN SUPPORT
+--------------------------------------------------
+
+Players.PlayerAdded:Connect(function(plr)
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(0.5)
+
+		if Settings.Enabled then
+			applyHitbox(plr)
+		end
+
+	end)
+
+end)
+
+--------------------------------------------------
 -- CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	ModifiedPlayers[plr] = nil
+	StoredSizes[plr] = nil
 end)
