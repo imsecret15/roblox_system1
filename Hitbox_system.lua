@@ -29,16 +29,16 @@ local function createHitbox(plr)
 	hitbox.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
 	hitbox.Color = Color3.fromRGB(255,0,0)
 	hitbox.Material = Enum.Material.Neon
+
 	hitbox.Transparency = Settings.Visible and 0.35 or 1
 
 	hitbox.CanCollide = false
-    hitbox.CanQuery = false
-    hitbox.CanTouch = false
-    hitbox.CollisionGroup = "Default"
-    hitbox.Anchored = true
-    hitbox.Massless = true
+	hitbox.CanQuery = false
+	hitbox.CanTouch = false
+	hitbox.Anchored = true
+	hitbox.Massless = true
 
-	-- Put inside camera so projectiles ignore it
+	-- keep arrows from hitting it
 	hitbox.Parent = workspace.CurrentCamera
 
 	Hitboxes[plr] = hitbox
@@ -46,10 +46,10 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- FOLLOW HEAD
+-- UPDATE / FOLLOW HEAD
 --------------------------------------------------
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
@@ -61,8 +61,20 @@ RunService.RenderStepped:Connect(function()
 		local head = char:FindFirstChild("Head")
 		if not head then continue end
 
-		-- only update position (very cheap)
+		-- follow player
 		hitbox.CFrame = head.CFrame
+
+		-- update size if changed
+		local newSize = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+		if hitbox.Size ~= newSize then
+			hitbox.Size = newSize
+		end
+
+		-- update visibility toggle
+		local newTransparency = Settings.Visible and 0.35 or 1
+		if hitbox.Transparency ~= newTransparency then
+			hitbox.Transparency = newTransparency
+		end
 
 	end
 
@@ -117,7 +129,7 @@ task.spawn(function()
 
 	while true do
 
-		task.wait(0.2)
+		task.wait(0.15)
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
@@ -133,14 +145,14 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN
+-- PLAYER JOIN SUPPORT
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.5)
+		task.wait(0.4)
 
 		if Settings.Enabled then
 			createHitbox(plr)
