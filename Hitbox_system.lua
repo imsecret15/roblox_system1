@@ -61,9 +61,8 @@ RunService.RenderStepped:Connect(function()
 		local head = char:FindFirstChild("Head")
 		if not head then continue end
 
-		hitbox.CFrame = head.CFrame:Lerp(hitbox.CFrame, 0)
-		hitbox.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-		hitbox.Transparency = Settings.Visible and 0.35 or 1
+		-- only update position (very cheap)
+		hitbox.CFrame = head.CFrame
 
 	end
 
