@@ -61,14 +61,11 @@ local CircleSize = 60
 -- HITBOX SETTINGS
 --------------------------------------------------
 
-_G.HitboxEnabled = false
-_G.HitboxVisible = true
-_G.HitboxSize = 8
-_G.BowMode = false
-
-_G.HitboxEnabled = HitboxEnabled
-_G.HitboxVisible = HitboxVisible
-_G.HitboxSize = HitboxSize
+shared.HitboxSettings = {
+    Enabled = false,
+    Visible = true,
+    Size = 8
+}
 
 --------------------------------------------------
 -- BOW MODE
@@ -672,18 +669,13 @@ end)
 -- HITBOX TOGGLE
 --------------------------------------------------
 
-hitboxButton.MouseButton1Click:Connect(function()
+shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
 
-	HitboxEnabled = not HitboxEnabled
-    _G.HitboxEnabled = HitboxEnabled
-
-	if HitboxEnabled then
-		hitboxButton.Text = "Hitbox : ON"
-	else
-		hitboxButton.Text = "Hitbox : OFF"
-	end
-
-end)
+if shared.HitboxSettings.Enabled then
+	hitboxButton.Text = "Hitbox : ON"
+else
+	hitboxButton.Text = "Hitbox : OFF"
+end
 
 --------------------------------------------------
 -- HITBOX VISIBILITY TOGGLE
@@ -691,14 +683,13 @@ end)
 
 hitboxVisibleButton.MouseButton1Click:Connect(function()
 
-	HitboxVisible = not HitboxVisible
-    _G.HitboxVisible = HitboxVisible
+	shared.HitboxSettings.Visible = not shared.HitboxSettings.Visible
 
-	if HitboxVisible then
-		hitboxVisibleButton.Text = "Hitbox Visible : ON"
-	else
-		hitboxVisibleButton.Text = "Hitbox Visible : OFF"
-	end
+if shared.HitboxSettings.Visible then
+	hitboxVisibleButton.Text = "Hitbox Visible : ON"
+else
+	hitboxVisibleButton.Text = "Hitbox Visible : OFF"
+end
 
 end)
 
@@ -711,11 +702,10 @@ hitboxSizeBox.FocusLost:Connect(function()
 	local value = tonumber(hitboxSizeBox.Text)
 
 	if value then
-		HitboxSize = value
-        _G.HitboxSize = value
-		hitboxSizeBox.Text = tostring(HitboxSize)
+		shared.HitboxSettings.Size = value
+		hitboxSizeBox.Text = tostring(shared.HitboxSettings.Size)
 	else
-		hitboxSizeBox.Text = tostring(HitboxSize)
+		hitboxSizeBox.Text = tostring(shared.HitboxSettings.Size)
 	end
 
 end)
