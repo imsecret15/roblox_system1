@@ -6,6 +6,10 @@ local Settings = shared.HitboxSettings
 
 local OriginalSizes = {}
 
+--------------------------------------------------
+-- APPLY HITBOX
+--------------------------------------------------
+
 local function applyHitbox(plr)
 
 	if plr == player then return end
@@ -20,13 +24,16 @@ local function applyHitbox(plr)
 		OriginalSizes[plr] = head.Size
 	end
 
-	head.Size = OriginalSizes[plr] + Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	head.Size = OriginalSizes[plr] + Vector3.new(Settings.Size, Settings.Size, Settings.Size)
 	head.Transparency = Settings.Visible and 0.3 or 1
 	head.Material = Enum.Material.Neon
 	head.Color = Color3.fromRGB(255,0,0)
 
 end
 
+--------------------------------------------------
+-- RESET HITBOX
+--------------------------------------------------
 
 local function resetHitbox(plr)
 
@@ -44,22 +51,36 @@ local function resetHitbox(plr)
 
 end
 
+--------------------------------------------------
+-- MAIN LOOP (SAFE THREAD)
+--------------------------------------------------
 
-while true do
-	task.wait(0.2)
+task.spawn(function()
 
-	for _,plr in pairs(Players:GetPlayers()) do
+	while task.wait(0.2) do
 
-		if plr ~= player then
+		for _,plr in pairs(Players:GetPlayers()) do
 
-			if Settings.Enabled then
-				applyHitbox(plr)
-			else
-				resetHitbox(plr)
+			if plr ~= player then
+
+				if Settings.Enabled then
+					applyHitbox(plr)
+				else
+					resetHitbox(plr)
+				end
+
 			end
 
 		end
 
 	end
 
-end
+end)
+
+--------------------------------------------------
+-- PLAYER LEAVE CLEANUP
+--------------------------------------------------
+
+Players.PlayerRemoving:Connect(function(plr)
+	OriginalSizes[plr] = nil
+end)
