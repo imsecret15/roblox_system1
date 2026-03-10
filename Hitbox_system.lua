@@ -1,6 +1,7 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
@@ -30,16 +31,23 @@ local function createHitbox(plr)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = false
+	hitbox.Anchored = true
 	hitbox.Massless = true
 	hitbox.Parent = char
 
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = hitbox
-	weld.Part1 = head
-	weld.Parent = hitbox
-
 	hitbox.CFrame = head.CFrame
+    RunService.RenderStepped:Connect(function()
+
+	if not Settings.Enabled then return end
+
+	if plr.Character then
+		local head = plr.Character:FindFirstChild("Head")
+		if head then
+			hitbox.CFrame = head.CFrame
+		end
+	end
+
+end)
 
 	Hitboxes[plr] = hitbox
 
