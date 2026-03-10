@@ -60,6 +60,8 @@ RunService.RenderStepped:Connect(function()
 
 		local head = char:FindFirstChild("Head")
 		if not head then continue end
+        head.Size = Vector3.new(Settings.Size/2, Settings.Size/2, Settings.Size/2)
+        head.CanCollide = false
 
 		hitbox.CFrame = head.CFrame
 		hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
