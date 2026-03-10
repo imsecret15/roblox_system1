@@ -58,14 +58,20 @@ local AimPart = "Head" -- Head or Body
 local CircleSize = 60
 
 --------------------------------------------------
--- HITBOX SETTINGS
+-- HITBOX TOGGLE
 --------------------------------------------------
 
-shared.HitboxSettings = {
-    Enabled = false,
-    Visible = true,
-    Size = 8
-}
+hitboxButton.MouseButton1Click:Connect(function()
+
+	shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
+
+	if shared.HitboxSettings.Enabled then
+		hitboxButton.Text = "Hitbox : ON"
+	else
+		hitboxButton.Text = "Hitbox : OFF"
+	end
+
+end)
 
 --------------------------------------------------
 -- BOW MODE
