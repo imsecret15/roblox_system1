@@ -26,16 +26,20 @@ local function createHitbox(plr)
 
 	local hitbox = Instance.new("Part")
 	hitbox.Name = "ExtraHitbox"
-	hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	hitbox.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
 	hitbox.Color = Color3.fromRGB(255,0,0)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = Settings.Visible and 0.35 or 1
 
 	hitbox.CanCollide = false
-	hitbox.Anchored = true
-	hitbox.Massless = true
+    hitbox.CanQuery = false
+    hitbox.CanTouch = false
+    hitbox.CollisionGroup = "Default"
+    hitbox.Anchored = true
+    hitbox.Massless = true
 
-	hitbox.Parent = workspace
+	-- Put inside camera so projectiles ignore it
+	hitbox.Parent = workspace.CurrentCamera
 
 	Hitboxes[plr] = hitbox
 
