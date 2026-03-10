@@ -61,9 +61,10 @@ local CircleSize = 60
 -- HITBOX SETTINGS
 --------------------------------------------------
 
-local HitboxEnabled = false
-local HitboxVisible = true
-local HitboxSize = 8
+_G.HitboxEnabled = false
+_G.HitboxVisible = true
+_G.HitboxSize = 8
+_G.BowMode = false
 
 --------------------------------------------------
 -- BOW MODE
