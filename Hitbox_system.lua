@@ -1,82 +1,109 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
-local ModifiedHeads = {}
+local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- APPLY HITBOX
+-- CREATE HITBOX
 --------------------------------------------------
 
-local function applyHitbox(plr)
+local function createHitbox(plr)
 
 	if plr == player then return end
-	if not plr.Character then return end
+	if Hitboxes[plr] then return end
 
 	local char = plr.Character
-	local head = char:FindFirstChild("Head")
+	if not char then return end
 
+	local head = char:FindFirstChild("Head")
 	if not head then return end
 
-	-- Save original size if not stored
-	if not ModifiedHeads[plr] then
-		ModifiedHeads[plr] = {
-			Head = head,
-			OriginalSize = head.Size
-		}
-	end
+	local hitbox = Instance.new("Part")
+	hitbox.Name = "ExtraHitbox"
+	hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	hitbox.Color = Color3.fromRGB(255,0,0)
+	hitbox.Material = Enum.Material.Neon
+	hitbox.Transparency = Settings.Visible and 0.35 or 1
 
-	head.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-	head.Material = Enum.Material.Neon
-	head.Color = Color3.fromRGB(255,0,0)
-	head.Transparency = Settings.Visible and 0.3 or 1
+	hitbox.CanCollide = false
+	hitbox.Anchored = true
+	hitbox.Massless = true
+	hitbox.Parent = workspace
 
-end
-
---------------------------------------------------
--- RESET HITBOX
---------------------------------------------------
-
-local function resetHitbox(plr)
-
-	local data = ModifiedHeads[plr]
-
-	if data and data.Head then
-		local head = data.Head
-
-		head.Size = data.OriginalSize
-		head.Transparency = 0
-		head.Material = Enum.Material.Plastic
-
-		ModifiedHeads[plr] = nil
-	end
+	Hitboxes[plr] = {
+		Part = hitbox,
+		Head = head
+	}
 
 end
 
 --------------------------------------------------
--- ENABLE
+-- REMOVE HITBOX
+--------------------------------------------------
+
+local function removeHitbox(plr)
+
+	local data = Hitboxes[plr]
+
+	if data and data.Part then
+		data.Part:Destroy()
+	end
+
+	Hitboxes[plr] = nil
+
+end
+
+--------------------------------------------------
+-- UPDATE HITBOX POSITION
+--------------------------------------------------
+
+RunService.RenderStepped:Connect(function()
+
+	if not Enabled then return end
+
+	for plr,data in pairs(Hitboxes) do
+
+		local char = plr.Character
+		local head = char and char:FindFirstChild("Head")
+
+		if head and data.Part then
+			data.Part.CFrame = head.CFrame
+			data.Part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			data.Part.Transparency = Settings.Visible and 0.35 or 1
+		end
+
+	end
+
+end)
+
+--------------------------------------------------
+-- ENABLE HITBOX
 --------------------------------------------------
 
 local function enableHitbox()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		applyHitbox(plr)
+		if plr ~= player then
+			createHitbox(plr)
+		end
 	end
 
 end
 
 --------------------------------------------------
--- DISABLE
+-- DISABLE HITBOX
 --------------------------------------------------
 
 local function disableHitbox()
 
-	for plr,_ in pairs(ModifiedHeads) do
-		resetHitbox(plr)
+	for plr,_ in pairs(Hitboxes) do
+		removeHitbox(plr)
 	end
 
 end
@@ -89,23 +116,15 @@ task.spawn(function()
 
 	while true do
 
-		task.wait(0.15)
+		task.wait(0.2)
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
 			Enabled = true
+
 		elseif not Settings.Enabled and Enabled then
 			disableHitbox()
 			Enabled = false
-		end
-
-		if Enabled then
-			for plr,data in pairs(ModifiedHeads) do
-				if plr.Character and data.Head then
-					data.Head.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-					data.Head.Transparency = Settings.Visible and 0.3 or 1
-				end
-			end
 		end
 
 	end
@@ -120,10 +139,10 @@ Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.3)
+		task.wait(0.5)
 
 		if Settings.Enabled then
-			applyHitbox(plr)
+			createHitbox(plr)
 		end
 
 	end)
@@ -131,27 +150,9 @@ Players.PlayerAdded:Connect(function(plr)
 end)
 
 --------------------------------------------------
--- PLAYER RESPAWN SUPPORT
---------------------------------------------------
-
-for _,plr in pairs(Players:GetPlayers()) do
-
-	plr.CharacterAdded:Connect(function()
-
-		task.wait(0.3)
-
-		if Settings.Enabled then
-			applyHitbox(plr)
-		end
-
-	end)
-
-end
-
---------------------------------------------------
 -- CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	resetHitbox(plr)
+	removeHitbox(plr)
 end)
