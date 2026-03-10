@@ -1,88 +1,82 @@
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
-local Hitboxes = {}
+local ModifiedHeads = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HITBOX
+-- APPLY HITBOX
 --------------------------------------------------
 
-local function createHitbox(plr)
+local function applyHitbox(plr)
 
 	if plr == player then return end
-	if Hitboxes[plr] then return end
+	if not plr.Character then return end
 
 	local char = plr.Character
-	if not char then return end
-
 	local head = char:FindFirstChild("Head")
+
 	if not head then return end
 
-	local hitbox = Instance.new("Part")
-	hitbox.Name = "Head"
-	hitbox.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-	hitbox.Color = Color3.fromRGB(255,0,0)
-	hitbox.Material = Enum.Material.Neon
-	hitbox.Transparency = Settings.Visible and 0.3 or 1
-	hitbox.CanCollide = false
-    hitbox.Anchored = false
-    hitbox.Massless = true
-    hitbox.Parent = char
+	-- Save original size if not stored
+	if not ModifiedHeads[plr] then
+		ModifiedHeads[plr] = {
+			Head = head,
+			OriginalSize = head.Size
+		}
+	end
 
-    local weld = Instance.new("WeldConstraint")
-    weld.Part0 = hitbox
-    weld.Part1 = head
-    weld.Parent = hitbox
-
-    hitbox.CFrame = head.CFrame
-
-	Hitboxes[plr] = hitbox
+	head.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	head.Material = Enum.Material.Neon
+	head.Color = Color3.fromRGB(255,0,0)
+	head.Transparency = Settings.Visible and 0.3 or 1
 
 end
 
 --------------------------------------------------
--- REMOVE HITBOX
+-- RESET HITBOX
 --------------------------------------------------
 
-local function removeHitbox(plr)
+local function resetHitbox(plr)
 
-	local box = Hitboxes[plr]
+	local data = ModifiedHeads[plr]
 
-	if box then
-		box:Destroy()
-		Hitboxes[plr] = nil
+	if data and data.Head then
+		local head = data.Head
+
+		head.Size = data.OriginalSize
+		head.Transparency = 0
+		head.Material = Enum.Material.Plastic
+
+		ModifiedHeads[plr] = nil
 	end
 
 end
 
 --------------------------------------------------
--- ENABLE HITBOX
+-- ENABLE
 --------------------------------------------------
 
 local function enableHitbox()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player then
-			createHitbox(plr)
-		end
+		applyHitbox(plr)
 	end
 
 end
 
 --------------------------------------------------
--- DISABLE HITBOX
+-- DISABLE
 --------------------------------------------------
 
 local function disableHitbox()
 
-	for plr,_ in pairs(Hitboxes) do
-		removeHitbox(plr)
+	for plr,_ in pairs(ModifiedHeads) do
+		resetHitbox(plr)
 	end
 
 end
@@ -95,15 +89,23 @@ task.spawn(function()
 
 	while true do
 
-		task.wait(0.2)
+		task.wait(0.15)
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
 			Enabled = true
-
 		elseif not Settings.Enabled and Enabled then
 			disableHitbox()
 			Enabled = false
+		end
+
+		if Enabled then
+			for plr,data in pairs(ModifiedHeads) do
+				if plr.Character and data.Head then
+					data.Head.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+					data.Head.Transparency = Settings.Visible and 0.3 or 1
+				end
+			end
 		end
 
 	end
@@ -118,10 +120,10 @@ Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.5)
+		task.wait(0.3)
 
 		if Settings.Enabled then
-			createHitbox(plr)
+			applyHitbox(plr)
 		end
 
 	end)
@@ -129,9 +131,27 @@ Players.PlayerAdded:Connect(function(plr)
 end)
 
 --------------------------------------------------
+-- PLAYER RESPAWN SUPPORT
+--------------------------------------------------
+
+for _,plr in pairs(Players:GetPlayers()) do
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(0.3)
+
+		if Settings.Enabled then
+			applyHitbox(plr)
+		end
+
+	end)
+
+end
+
+--------------------------------------------------
 -- CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	removeHitbox(plr)
+	resetHitbox(plr)
 end)
