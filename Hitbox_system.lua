@@ -28,7 +28,7 @@ local function createHitbox(target)
 	hitbox.Material = Enum.Material.Neon
 	hitbox.Transparency = _G.HitboxVisible and 0.3 or 1
 	hitbox.CanCollide = false
-	hitbox.Anchored = false
+	hitbox.Anchored = true
 	hitbox.Massless = true
 	hitbox.Parent = char
 
