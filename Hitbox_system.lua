@@ -1,8 +1,9 @@
+-- Hitbox_system.lua
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-
 local Hitboxes = {}
 
 --------------------------------------------------
@@ -22,12 +23,13 @@ local function createHitbox(target)
 
 	local hitbox = Instance.new("Part")
 	hitbox.Name = "FakeHitbox"
-	hitbox.Size = Vector3.new(HitboxSize,HitboxSize,HitboxSize)
+	hitbox.Size = Vector3.new(_G.HitboxSize,_G.HitboxSize,_G.HitboxSize)
 	hitbox.Color = Color3.fromRGB(255,0,0)
 	hitbox.Material = Enum.Material.Neon
-	hitbox.Transparency = HitboxVisible and 0.3 or 1
+	hitbox.Transparency = _G.HitboxVisible and 0.3 or 1
 	hitbox.CanCollide = false
 	hitbox.Anchored = false
+	hitbox.Massless = true
 	hitbox.Parent = char
 
 	local weld = Instance.new("WeldConstraint")
@@ -60,7 +62,7 @@ end
 
 RunService.Heartbeat:Connect(function()
 
-	if HitboxEnabled then
+	if _G.HitboxEnabled then
 
 		for _,v in pairs(Players:GetPlayers()) do
 			createHitbox(v)
@@ -68,9 +70,9 @@ RunService.Heartbeat:Connect(function()
 
 		for plr,box in pairs(Hitboxes) do
 
-			if box then
-				box.Size = Vector3.new(HitboxSize,HitboxSize,HitboxSize)
-				box.Transparency = HitboxVisible and 0.3 or 1
+			if box and box.Parent then
+				box.Size = Vector3.new(_G.HitboxSize,_G.HitboxSize,_G.HitboxSize)
+				box.Transparency = _G.HitboxVisible and 0.3 or 1
 			end
 
 		end
@@ -94,7 +96,7 @@ Players.PlayerAdded:Connect(function(plr)
 	plr.CharacterAdded:Connect(function()
 		task.wait(0.5)
 
-		if HitboxEnabled then
+		if _G.HitboxEnabled then
 			createHitbox(plr)
 		end
 	end)
