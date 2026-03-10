@@ -66,6 +66,10 @@ _G.HitboxVisible = true
 _G.HitboxSize = 8
 _G.BowMode = false
 
+_G.HitboxEnabled = HitboxEnabled
+_G.HitboxVisible = HitboxVisible
+_G.HitboxSize = HitboxSize
+
 --------------------------------------------------
 -- BOW MODE
 --------------------------------------------------
@@ -83,6 +87,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_sys
 --------------------------------------------------
 
 local mainGui = Instance.new("ScreenGui")
+mainGui.ResetOnSpawn = false
 mainGui.Parent = player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
@@ -670,6 +675,7 @@ end)
 hitboxButton.MouseButton1Click:Connect(function()
 
 	HitboxEnabled = not HitboxEnabled
+    _G.HitboxEnabled = HitboxEnabled
 
 	if HitboxEnabled then
 		hitboxButton.Text = "Hitbox : ON"
@@ -686,6 +692,7 @@ end)
 hitboxVisibleButton.MouseButton1Click:Connect(function()
 
 	HitboxVisible = not HitboxVisible
+    _G.HitboxVisible = HitboxVisible
 
 	if HitboxVisible then
 		hitboxVisibleButton.Text = "Hitbox Visible : ON"
@@ -705,6 +712,7 @@ hitboxSizeBox.FocusLost:Connect(function()
 
 	if value then
 		HitboxSize = value
+        _G.HitboxSize = value
 		hitboxSizeBox.Text = tostring(HitboxSize)
 	else
 		hitboxSizeBox.Text = tostring(HitboxSize)
