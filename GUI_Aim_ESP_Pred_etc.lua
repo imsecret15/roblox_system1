@@ -58,22 +58,6 @@ local AimPart = "Head" -- Head or Body
 local CircleSize = 60
 
 --------------------------------------------------
--- HITBOX TOGGLE
---------------------------------------------------
-
-hitboxButton.MouseButton1Click:Connect(function()
-
-	shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
-
-	if shared.HitboxSettings.Enabled then
-		hitboxButton.Text = "Hitbox : ON"
-	else
-		hitboxButton.Text = "Hitbox : OFF"
-	end
-
-end)
-
---------------------------------------------------
 -- BOW MODE
 --------------------------------------------------
 
@@ -327,6 +311,18 @@ hitboxButton.Parent = scrollFrame
 
 local hitboxCorner = Instance.new("UICorner")
 hitboxCorner.Parent = hitboxButton
+
+hitboxButton.MouseButton1Click:Connect(function()
+
+	shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
+
+	if shared.HitboxSettings.Enabled then
+		hitboxButton.Text = "Hitbox : ON"
+	else
+		hitboxButton.Text = "Hitbox : OFF"
+	end
+
+end)
 
 --------------------------------------------------
 -- HITBOX VISIBILITY BUTTON
@@ -670,18 +666,6 @@ circleButton.MouseButton1Click:Connect(function()
 	end
 
 end)
-
---------------------------------------------------
--- HITBOX TOGGLE
---------------------------------------------------
-
-shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
-
-if shared.HitboxSettings.Enabled then
-	hitboxButton.Text = "Hitbox : ON"
-else
-	hitboxButton.Text = "Hitbox : OFF"
-end
 
 --------------------------------------------------
 -- HITBOX VISIBILITY TOGGLE
