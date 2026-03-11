@@ -58,8 +58,8 @@ local function createHitbox(plr)
 
 		part.Anchored = true
 		part.CanCollide = false
-		part.CanTouch = true -- FIXED
-		part.CanQuery = true -- FIXED
+		part.CanTouch = false -- FIXED
+		part.CanQuery = false -- FIXED
 
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(255,0,0)
