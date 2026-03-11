@@ -21,62 +21,67 @@ local function createHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root then return end
+	local head = char:FindFirstChild("Head")
+	if not head then return end
 
-	local box = Instance.new("Part")
-	box.Name = "ExtraHitbox"
-	box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	local hitbox = Instance.new("Part")
+	hitbox.Name = "ExtraHitbox"
+	hitbox.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+	hitbox.Color = Color3.fromRGB(255,0,0)
+	hitbox.Material = Enum.Material.Neon
 
-	box.Anchored = false
-	box.CanCollide = false
-	box.CanTouch = false
-	box.CanQuery = false
+	hitbox.Transparency = Settings.Visible and 0.35 or 1
 
-	box.Massless = true
-	box.Material = Enum.Material.Neon
-	box.Color = Color3.fromRGB(255,0,0)
-	box.Transparency = Settings.Visible and 0.4 or 1
+	hitbox.CanCollide = false
+	hitbox.CanQuery = false
+	hitbox.CanTouch = false
+	hitbox.Anchored = true
+	hitbox.Massless = true
 
-	box.Parent = char
+	-- keep arrows from hitting it
+	hitbox.Parent = workspace.CurrentCamera
 
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = root
-	weld.Part1 = box
-	weld.Parent = box
-
-	box.CFrame = root.CFrame
-
-	Hitboxes[plr] = box
+	Hitboxes[plr] = hitbox
 
 end
 
 --------------------------------------------------
--- UPDATE
+-- UPDATE / FOLLOW HEAD
 --------------------------------------------------
 
 RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
-	for plr,box in pairs(Hitboxes) do
+	for plr, hitbox in pairs(Hitboxes) do
 
-		if not box then continue end
+		local char = plr.Character
+		if not char then continue end
 
-		local newSize = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		local head = char:FindFirstChild("Head")
+		if not head then continue end
 
-		if box.Size ~= newSize then
-			box.Size = newSize
+		-- follow player
+		hitbox.CFrame = head.CFrame * CFrame.new(0,0,-0.25)
+
+		-- update size if changed
+		local newSize = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+		if hitbox.Size ~= newSize then
+			hitbox.Size = newSize
 		end
 
-		box.Transparency = Settings.Visible and 0.4 or 1
+		-- update visibility toggle
+		local newTransparency = Settings.Visible and 0.35 or 1
+		if hitbox.Transparency ~= newTransparency then
+			hitbox.Transparency = newTransparency
+		end
 
 	end
 
 end)
 
 --------------------------------------------------
--- REMOVE
+-- REMOVE HITBOX
 --------------------------------------------------
 
 local function removeHitbox(plr)
@@ -97,10 +102,10 @@ end
 local function enableHitbox()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		createHitbox(plr)
+		if plr ~= player then
+			createHitbox(plr)
+		end
 	end
-
-	Enabled = true
 
 end
 
@@ -113,8 +118,6 @@ local function disableHitbox()
 	for plr,_ in pairs(Hitboxes) do
 		removeHitbox(plr)
 	end
-
-	Enabled = false
 
 end
 
@@ -130,9 +133,11 @@ task.spawn(function()
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
+			Enabled = true
 
 		elseif not Settings.Enabled and Enabled then
 			disableHitbox()
+			Enabled = false
 		end
 
 	end
@@ -140,14 +145,14 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN
+-- PLAYER JOIN SUPPORT
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.5)
+		task.wait(0.4)
 
 		if Settings.Enabled then
 			createHitbox(plr)
