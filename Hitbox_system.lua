@@ -38,7 +38,7 @@ local function createHitbox(plr)
 
 	local folder = Instance.new("Folder")
 	folder.Name = "ExtraHitbox"
-	folder.Parent = workspace -- FIXED (was CurrentCamera)
+	folder.Parent = char -- IMPORTANT FIX
 
 	local parts = {}
 
@@ -56,10 +56,10 @@ local function createHitbox(plr)
 
 		local part = Instance.new("Part")
 
-		part.Anchored = true
+		part.Anchored = false
 		part.CanCollide = false
-		part.CanTouch = false -- FIXED
-		part.CanQuery = false -- FIXED
+		part.CanTouch = false
+		part.CanQuery = false
 
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(255,0,0)
@@ -68,6 +68,11 @@ local function createHitbox(plr)
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
 		part.Parent = folder
+
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = part
+		weld.Part1 = root
+		weld.Parent = part
 
 		table.insert(parts,{
 			part = part,
@@ -108,7 +113,6 @@ RunService.RenderStepped:Connect(function()
 
 			if not root then continue end
 
-			-- create if missing
 			if not Hitboxes[plr] then
 				createHitbox(plr)
 			end
@@ -116,15 +120,12 @@ RunService.RenderStepped:Connect(function()
 			local data = Hitboxes[plr]
 			if not data then continue end
 
-			data.root = root
-
 			for _,info in pairs(data.parts) do
 
 				local part = info.part
 				local offset = info.offset
 
 				part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
-
 				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 				part.Transparency = Settings.Visible and 0.4 or 1
 
