@@ -5,7 +5,11 @@ local RunService = game:GetService("RunService")
 local PhysicsService = game:GetService("PhysicsService")
 
 local player = Players.LocalPlayer
-local Settings = shared.HitboxSettings
+local Settings
+repeat
+	task.wait()
+	Settings = shared.HitboxSettings
+until Settings
 
 local Hitboxes = {}
 local Enabled = false
@@ -18,7 +22,9 @@ pcall(function()
 	PhysicsService:CreateCollisionGroup("HitboxGhost")
 end)
 
-PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
+pcall(function()
+	PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
+end)
 
 --------------------------------------------------
 -- CREATE HITBOX
