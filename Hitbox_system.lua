@@ -79,57 +79,42 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE HITBOXES
+-- UPDATE + AUTO CREATE
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
-	for plr,data in pairs(Hitboxes) do
+	for _,plr in pairs(Players:GetPlayers()) do
 
-		local root = data.root
+		if plr ~= player then
 
-		if not root or not root.Parent then
-			createHitbox(plr)
-			continue
-		end
+			local char = plr.Character
+			if not char then continue end
 
-		for _,info in pairs(data.parts) do
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if not root then continue end
 
-			local part = info.part
-			local offset = info.offset
+			-- create if missing
+			if not Hitboxes[plr] then
+				createHitbox(plr)
+			end
 
-			part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
+			local data = Hitboxes[plr]
+			if not data then continue end
 
-			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			part.Transparency = Settings.Visible and 0.4 or 1
+			data.root = root
 
-		end
+			for _,info in pairs(data.parts) do
 
-	end
+				local part = info.part
+				local offset = info.offset
 
-end)
+				part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
 
---------------------------------------------------
--- AUTO SCANNER (FIXES MISSING HITBOXES)
---------------------------------------------------
-
-task.spawn(function()
-
-	while true do
-
-		task.wait(1)
-
-		if not Enabled then continue end
-
-		for _,plr in pairs(Players:GetPlayers()) do
-
-			if plr ~= player then
-
-				if not Hitboxes[plr] then
-					createHitbox(plr)
-				end
+				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+				part.Transparency = Settings.Visible and 0.4 or 1
 
 			end
 
@@ -206,25 +191,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN
---------------------------------------------------
-
-Players.PlayerAdded:Connect(function(plr)
-
-	plr.CharacterAdded:Connect(function()
-
-		task.wait(0.5)
-
-		if Settings.Enabled then
-			createHitbox(plr)
-		end
-
-	end)
-
-end)
-
---------------------------------------------------
--- CLEANUP
+-- PLAYER CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
