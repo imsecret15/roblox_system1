@@ -1,62 +1,37 @@
 -- Bowmode_system.lua
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local Settings
-repeat
-	task.wait()
-	Settings = shared.BowModeSettings
-until Settings
+repeat task.wait() until shared.BowModeSettings
+Settings = shared.BowModeSettings
 
 local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HEAD BOX
+-- FIND BOW
 --------------------------------------------------
 
-local function createBox(plr)
+local function getBow()
 
-	if plr == player then return end
-
-	local char = plr.Character
+	local char = player.Character
 	if not char then return end
 
-	local head = char:FindFirstChild("Head")
-	if not head then return end
-
-	if Boxes[plr] then
-		if Boxes[plr].Adornee == head then return end
-		Boxes[plr]:Destroy()
+	for _,tool in pairs(player.Backpack:GetChildren()) do
+		if tool:FindFirstChild("mouse") then
+			return tool
+		end
 	end
 
-	local box = Instance.new("BoxHandleAdornment")
-	box.Name = "BowModeBox"
-	box.Adornee = head
-	box.AlwaysOnTop = true
-	box.ZIndex = 10
-	box.Size = Vector3.new(3,3,3)
-	box.Color3 = Color3.fromRGB(255,50,50)
-	box.Transparency = Settings.Visible and 0.4 or 1
-	box.Parent = head
-
-	Boxes[plr] = box
-
-end
-
---------------------------------------------------
--- CLEANUP
---------------------------------------------------
-
-local function removeBox(plr)
-
-	if Boxes[plr] then
-		Boxes[plr]:Destroy()
-		Boxes[plr] = nil
+	if char then
+		for _,tool in pairs(char:GetChildren()) do
+			if tool:FindFirstChild("mouse") then
+				return tool
+			end
+		end
 	end
 
 end
@@ -67,28 +42,18 @@ end
 
 local function getTargetHead()
 
-	-- priority: aimlock target
 	if shared.AimTarget and shared.AimTarget.Character then
-
-		local head = shared.AimTarget.Character:FindFirstChild("Head")
-		if head then
-			return head
-		end
-
+		return shared.AimTarget.Character:FindFirstChild("Head")
 	end
 
-	-- fallback: closest to crosshair
 	local closest
 	local shortest = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
-		if plr ~= player then
+		if plr ~= player and plr.Character then
 
-			local char = plr.Character
-			if not char then continue end
-
-			local head = char:FindFirstChild("Head")
+			local head = plr.Character:FindFirstChild("Head")
 			if not head then continue end
 
 			local pos, visible = camera:WorldToViewportPoint(head.Position)
@@ -111,72 +76,65 @@ local function getTargetHead()
 end
 
 --------------------------------------------------
--- ARROW REDIRECT
+-- BOX VISUAL
 --------------------------------------------------
 
-workspace.ChildAdded:Connect(function(obj)
+local function createBox(plr)
 
-	if not Enabled then return end
-	if not obj:IsA("BasePart") then return end
+	if plr == player then return end
+	if not plr.Character then return end
 
-	local name = obj.Name:lower()
+	local head = plr.Character:FindFirstChild("Head")
+	if not head then return end
 
-	if name:find("arrow") or name:find("projectile") then
+	if Boxes[plr] then return end
 
-		local head = getTargetHead()
+	local box = Instance.new("BoxHandleAdornment")
+	box.Adornee = head
+	box.Size = Vector3.new(3,3,3)
+	box.Color3 = Color3.fromRGB(255,50,50)
+	box.AlwaysOnTop = true
+	box.Transparency = Settings.Visible and 0.4 or 1
+	box.Parent = head
 
-		if head then
+	Boxes[plr] = box
 
-			local direction = (head.Position - camera.CFrame.Position).Unit
+end
 
-			obj.CFrame = CFrame.new(
-				head.Position - direction * 2,
-				head.Position
-			)
+--------------------------------------------------
+-- BOW HOOK
+--------------------------------------------------
 
+local function hookBow()
+
+	local bow = getBow()
+	if not bow then return end
+
+	local mouseEvent = bow:FindFirstChild("mouse")
+	if not mouseEvent then return end
+
+	local old
+	old = hookmetamethod(game,"__namecall",function(self,...)
+
+		local args = {...}
+		local method = getnamecallmethod()
+
+		if Enabled and self == mouseEvent and method == "FireServer" then
+
+			local head = getTargetHead()
+
+			if head then
+				args[1] = head.Position
+			end
+
+			return old(self,unpack(args))
 		end
 
-	end
-
-end)
-
---------------------------------------------------
--- UPDATE BOXES
---------------------------------------------------
-
-RunService.RenderStepped:Connect(function()
-
-	if not Enabled then return end
-
-	for _,plr in pairs(Players:GetPlayers()) do
-
-		if plr ~= player then
-			createBox(plr)
-		end
-
-	end
-
-end)
-
---------------------------------------------------
--- RESPAWN SUPPORT
---------------------------------------------------
-
-Players.PlayerAdded:Connect(function(plr)
-
-	plr.CharacterAdded:Connect(function()
-
-		task.wait(0.5)
-
-		if Enabled then
-			createBox(plr)
-		end
+		return old(self,...)
 
 	end)
 
-end)
-
-Players.PlayerRemoving:Connect(removeBox)
+end
 
 --------------------------------------------------
 -- ENABLE / DISABLE
@@ -189,6 +147,8 @@ local function enable()
 	for _,plr in pairs(Players:GetPlayers()) do
 		createBox(plr)
 	end
+
+	hookBow()
 
 end
 
