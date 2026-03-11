@@ -2,12 +2,23 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local PhysicsService = game:GetService("PhysicsService")
 
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
 local Hitboxes = {}
 local Enabled = false
+
+--------------------------------------------------
+-- COLLISION GROUP SETUP
+--------------------------------------------------
+
+pcall(function()
+	PhysicsService:CreateCollisionGroup("HitboxGhost")
+end)
+
+PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
 
 --------------------------------------------------
 -- CREATE HITBOX
@@ -61,6 +72,8 @@ local function createHitbox(plr)
 		part.CanTouch = false
 		part.CanQuery = false
 
+		PhysicsService:SetPartCollisionGroup(part,"HitboxGhost")
+
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(255,0,0)
 
@@ -85,7 +98,7 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE LOOP
+-- UPDATE + AUTO CREATE
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
@@ -114,6 +127,8 @@ RunService.RenderStepped:Connect(function()
 
 			local data = Hitboxes[plr]
 			if not data then continue end
+
+			data.root = root
 
 			for _,info in pairs(data.parts) do
 
@@ -199,9 +214,27 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- CLEANUP
+-- PLAYER CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
 	removeHitbox(plr)
+end)
+
+--------------------------------------------------
+-- RESPAWN SUPPORT
+--------------------------------------------------
+
+Players.PlayerAdded:Connect(function(plr)
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(1)
+
+		if Enabled then
+			createHitbox(plr)
+		end
+
+	end)
+
 end)
