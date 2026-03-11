@@ -10,7 +10,6 @@ local player = Players.LocalPlayer
 local Hitboxes = {}
 local LastEnabled = false
 
--- SAFE SETTINGS
 local function getSettings()
 	if shared and shared.HitboxSettings then
 		return shared.HitboxSettings
@@ -23,7 +22,6 @@ local function getSettings()
 	}
 end
 
--- REMOVE HITBOX
 local function removeHitbox(plr)
 
 	local data = Hitboxes[plr]
@@ -39,7 +37,6 @@ local function removeHitbox(plr)
 
 end
 
--- REMOVE ALL
 local function removeAll()
 
 	local list = {}
@@ -54,7 +51,6 @@ local function removeAll()
 
 end
 
--- CREATE HITBOX
 local function createHitbox(plr)
 
 	if plr == player then return end
@@ -115,7 +111,6 @@ local function createHitbox(plr)
 
 end
 
--- UPDATE LOOP
 RunService.RenderStepped:Connect(function()
 
 	local Settings = getSettings()
@@ -142,27 +137,36 @@ RunService.RenderStepped:Connect(function()
 		if plr ~= player then
 
 			local char = plr.Character
-			if not char then continue end
 
-			local root = char:FindFirstChild("HumanoidRootPart")
-			if not root then continue end
+			if char then
 
-			if not Hitboxes[plr] then
-				createHitbox(plr)
-			end
+				local root = char:FindFirstChild("HumanoidRootPart")
 
-			local data = Hitboxes[plr]
-			if not data then continue end
+				if root then
 
-			for _,info in ipairs(data.parts) do
+					if not Hitboxes[plr] then
+						createHitbox(plr)
+					end
 
-				local part = info.part
-				local offset = info.offset
+					local data = Hitboxes[plr]
 
-				if part and part.Parent then
-					part.CFrame = root.CFrame * CFrame.new(offset)
-					part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-					part.Transparency = Settings.Visible and 0.4 or 1
+					if data then
+
+						for _,info in ipairs(data.parts) do
+
+							local part = info.part
+							local offset = info.offset
+
+							if part and part.Parent then
+								part.CFrame = root.CFrame * CFrame.new(offset)
+								part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+								part.Transparency = Settings.Visible and 0.4 or 1
+							end
+
+						end
+
+					end
+
 				end
 
 			end
@@ -172,7 +176,6 @@ RunService.RenderStepped:Connect(function()
 
 end)
 
--- PLAYER EVENTS
 Players.PlayerRemoving:Connect(function(plr)
 	removeHitbox(plr)
 end)
