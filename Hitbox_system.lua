@@ -2,23 +2,29 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local PhysicsService = game:GetService("PhysicsService")
 
 local player = Players.LocalPlayer
-local Settings = shared.HitboxSettings
 
 local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- COLLISION GROUP SETUP
+-- SAFE SETTINGS
 --------------------------------------------------
 
-pcall(function()
-	PhysicsService:CreateCollisionGroup("HitboxGhost")
-end)
+local function getSettings()
 
-PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
+	if shared.HitboxSettings then
+		return shared.HitboxSettings
+	end
+
+	return {
+		Enabled = false,
+		Size = 5,
+		Visible = true
+	}
+
+end
 
 --------------------------------------------------
 -- CREATE HITBOX
@@ -40,7 +46,6 @@ local function createHitbox(plr)
 
 	if not root then return end
 
-	-- remove old
 	if Hitboxes[plr] then
 		if Hitboxes[plr].folder then
 			Hitboxes[plr].folder:Destroy()
@@ -63,6 +68,8 @@ local function createHitbox(plr)
 		Vector3.new(0,-1,0)
 	}
 
+	local Settings = getSettings()
+
 	for _,offset in ipairs(offsets) do
 
 		local part = Instance.new("Part")
@@ -71,8 +78,6 @@ local function createHitbox(plr)
 		part.CanCollide = false
 		part.CanTouch = false
 		part.CanQuery = false
-
-		PhysicsService:SetPartCollisionGroup(part,"HitboxGhost")
 
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(255,0,0)
@@ -98,12 +103,14 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE + AUTO CREATE
+-- UPDATE
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
 
-	if not Enabled then return end
+	local Settings = getSettings()
+
+	if not Settings.Enabled then return end
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
@@ -128,14 +135,13 @@ RunService.RenderStepped:Connect(function()
 			local data = Hitboxes[plr]
 			if not data then continue end
 
-			data.root = root
-
 			for _,info in pairs(data.parts) do
 
 				local part = info.part
 				local offset = info.offset
 
 				part.CFrame = root.CFrame * CFrame.new(offset)
+
 				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 				part.Transparency = Settings.Visible and 0.4 or 1
 
@@ -148,93 +154,17 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------
--- REMOVE
---------------------------------------------------
-
-local function removeHitbox(plr)
-
-	local data = Hitboxes[plr]
-
-	if data then
-		if data.folder then
-			data.folder:Destroy()
-		end
-		Hitboxes[plr] = nil
-	end
-
-end
-
---------------------------------------------------
--- ENABLE
---------------------------------------------------
-
-local function enableHitbox()
-
-	Enabled = true
-
-	for _,plr in pairs(Players:GetPlayers()) do
-		createHitbox(plr)
-	end
-
-end
-
---------------------------------------------------
--- DISABLE
---------------------------------------------------
-
-local function disableHitbox()
-
-	Enabled = false
-
-	for plr,_ in pairs(Hitboxes) do
-		removeHitbox(plr)
-	end
-
-end
-
---------------------------------------------------
--- SETTINGS WATCHER
---------------------------------------------------
-
-task.spawn(function()
-
-	while true do
-
-		task.wait(0.15)
-
-		if Settings.Enabled and not Enabled then
-			enableHitbox()
-
-		elseif not Settings.Enabled and Enabled then
-			disableHitbox()
-		end
-
-	end
-
-end)
-
---------------------------------------------------
--- PLAYER CLEANUP
+-- CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-	removeHitbox(plr)
-end)
 
---------------------------------------------------
--- RESPAWN SUPPORT
---------------------------------------------------
+	local data = Hitboxes[plr]
 
-Players.PlayerAdded:Connect(function(plr)
+	if data and data.folder then
+		data.folder:Destroy()
+	end
 
-	plr.CharacterAdded:Connect(function()
-
-		task.wait(1)
-
-		if Enabled then
-			createHitbox(plr)
-		end
-
-	end)
+	Hitboxes[plr] = nil
 
 end)
