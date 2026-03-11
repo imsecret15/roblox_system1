@@ -135,7 +135,7 @@ RunService.RenderStepped:Connect(function()
 				local part = info.part
 				local offset = info.offset
 
-				part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
+				part.CFrame = root.CFrame * CFrame.new(offset)
 				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 				part.Transparency = Settings.Visible and 0.4 or 1
 
