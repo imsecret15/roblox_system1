@@ -1,6 +1,8 @@
 -- Bowmode_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 
 local Settings
@@ -23,10 +25,10 @@ local function createIndicator()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "BowModeIndicator"
 	gui.ResetOnSpawn = false
-	gui.Parent = game:GetService("CoreGui")
+	gui.Parent = player:WaitForChild("PlayerGui")
 
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0,10,0,10)
+	frame.Size = UDim2.new(0,12,0,12)
 	frame.Position = UDim2.new(0,10,0,10)
 	frame.BackgroundColor3 = Color3.fromRGB(255,50,50)
 	frame.BorderSizePixel = 0
@@ -65,11 +67,11 @@ local function createBox(plr)
 	local box = Instance.new("BoxHandleAdornment")
 	box.Name = "BowModeBox"
 	box.Adornee = head
-	box.Size = Vector3.new(3,3,3)
+	box.Size = Vector3.new(5,5,5)
 	box.Color3 = Color3.fromRGB(255,50,50)
 	box.AlwaysOnTop = true
 	box.ZIndex = 10
-	box.Transparency = Settings.Visible and 0.4 or 1
+	box.Transparency = Settings.Visible and 0.35 or 1
 	box.Parent = head
 
 	Boxes[plr] = box
@@ -85,30 +87,22 @@ local function getTargetHead()
 	local cam = workspace.CurrentCamera
 	local camPos = cam.CFrame.Position
 
-	-- priority: aimlock
+	-- AIMLOCK PRIORITY
 	if shared.AimTarget and shared.AimTarget.Character then
+
 		local head = shared.AimTarget.Character:FindFirstChild("Head")
-		local root = shared.AimTarget.Character:FindFirstChild("HumanoidRootPart")
 
-		if head and root then
-			local dist = (head.Position - camPos).Magnitude
-
-			local vel = root.AssemblyLinearVelocity
-			local speed = vel.Magnitude
-
-			local time = dist / 180
-			local prediction = vel * time
-
-			local drop = Vector3.new(0, (dist * 0.002) + (speed * 0.003), 0)
-
+		if head then
 			return {
 				head = head,
-				position = head.Position + prediction + drop
+				position = head.Position
 			}
 		end
+
 	end
 
-	-- fallback: closest player
+	------------------------------------------------
+
 	local closest
 	local bestDist = math.huge
 
@@ -124,15 +118,21 @@ local function getTargetHead()
 				local dist = (head.Position - camPos).Magnitude
 
 				if dist < bestDist then
+
 					bestDist = dist
 
 					local vel = root.AssemblyLinearVelocity
 					local speed = vel.Magnitude
 
-					local time = dist / 180
-					local prediction = vel * time
+					local travelTime = dist / 120
 
-					local drop = Vector3.new(0, (dist * 0.002) + (speed * 0.003), 0)
+					local prediction = vel * travelTime
+
+					local drop = Vector3.new(
+						0,
+						(dist * 0.002) + (speed * 0.002),
+						0
+					)
 
 					closest = {
 						head = head,
@@ -152,7 +152,7 @@ local function getTargetHead()
 end
 
 --------------------------------------------------
--- REMOTE HOOK (REAL FIX)
+-- REMOTE HOOK
 --------------------------------------------------
 
 local mt = getrawmetatable(game)
@@ -167,7 +167,7 @@ mt.__namecall = newcclosure(function(self,...)
 
 	if Enabled and method == "FireServer" then
 
-		if typeof(args[3]) == "string" and args[3] == "S" then
+		if typeof(args[1]) == "Vector3" then
 
 			local target = getTargetHead()
 
@@ -191,7 +191,7 @@ setreadonly(mt,true)
 -- UPDATE BOXES
 --------------------------------------------------
 
-game:GetService("RunService").RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
@@ -208,10 +208,13 @@ end)
 local function connect(plr)
 
 	plr.CharacterAdded:Connect(function()
+
 		task.wait(0.4)
+
 		if Enabled then
 			createBox(plr)
 		end
+
 	end)
 
 end
