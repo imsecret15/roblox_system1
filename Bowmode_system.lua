@@ -25,10 +25,13 @@ local function createIndicator()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "BowModeIndicator"
 	gui.ResetOnSpawn = false
+	gui.DisplayOrder = 999
+	gui.IgnoreGuiInset = true
 	gui.Parent = player:WaitForChild("PlayerGui")
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0,12,0,12)
+	frame.AnchorPoint = Vector2.new(0,0)
 	frame.Position = UDim2.new(0,10,0,10)
 	frame.BackgroundColor3 = Color3.fromRGB(255,50,50)
 	frame.BorderSizePixel = 0
