@@ -21,7 +21,7 @@ local CircleVisible = true
 ------------------------------------------------
 
 local Prediction = 0.14
-local HeadOffset = Vector3.new(0,-0.12,0)
+local HeadOffset = Vector3.new(0,-0.19,0)
 
 --------------------------------------------------
 -- ESP SETTINGS
