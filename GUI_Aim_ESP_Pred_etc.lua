@@ -13,36 +13,6 @@ local camera = workspace.CurrentCamera
 --------------------------------------------------
 
 --------------------------------------------------
--- UI STYLE FUNCTION
---------------------------------------------------
-
-local function styleButton(btn)
-
-	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	btn.TextColor3 = Color3.fromRGB(255,255,255)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0,8)
-	corner.Parent = btn
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(70,70,70)
-	stroke.Thickness = 1
-	stroke.Parent = btn
-
-	btn.MouseEnter:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-	end)
-
-	btn.MouseLeave:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	end)
-
-end
-
---------------------------------------------------
 -- CIRCLE VISIBLE SETTINGS
 --------------------------------------------------
 
@@ -147,61 +117,27 @@ mainGui.Parent = player:WaitForChild("PlayerGui")
 --------------------------------------------------
 
 local openButton = Instance.new("TextButton")
-openButton.Size = UDim2.new(0,40,0,40)
-openButton.Position = UDim2.new(0,10,0.5,-20)
+openButton.Size = UDim2.new(0,55,0,55)
+openButton.Position = UDim2.new(0,10,0.5,-30)
 openButton.Text = "≡"
+openButton.TextSize = 28
+openButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+openButton.TextColor3 = Color3.new(1,1,1)
 openButton.Parent = mainGui
-styleButton(openButton)
+
+local openCorner = Instance.new("UICorner")
+openCorner.Parent = openButton
 
 --------------------------------------------------
 -- MENU FRAME
 --------------------------------------------------
 
 local menuFrame = Instance.new("Frame")
-menuFrame.Size = UDim2.new(0,220,0,180)
-menuFrame.Position = UDim2.new(0,60,0.5,-90)
+menuFrame.Size = UDim2.new(0,360,0,420)
+menuFrame.Position = UDim2.new(0,75,0.5,-210)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 menuFrame.Visible = false
 menuFrame.Parent = mainGui
-
---------------------------------------------------
--- DRAG SYSTEM
---------------------------------------------------
-
-local dragging = false
-local dragStart
-local startPos
-
-menuFrame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = menuFrame.Position
-	end
-end)
-
-menuFrame.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-
-		local delta = input.Position - dragStart
-
-		menuFrame.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-
-	end
-
-end)
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.Parent = menuFrame
@@ -211,116 +147,134 @@ menuCorner.Parent = menuFrame
 --------------------------------------------------
 
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-10,1,-10)
-scrollFrame.Position = UDim2.new(0,5,0,5)
+scrollFrame.Size = UDim2.new(1,-20,1,-20)
+scrollFrame.Position = UDim2.new(0,10,0,10)
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
-scrollFrame.ScrollBarThickness = 4
+scrollFrame.ScrollBarThickness = 6
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.Parent = menuFrame
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,8)
+layout.Padding = UDim.new(0,10)
 layout.Parent = scrollFrame
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
-
-
 --------------------------------------------------
--- ESP TOGGLE BUTTON
+-- BUTTON CREATOR FUNCTION
 --------------------------------------------------
 
-local espButton = Instance.new("TextButton")
-espButton.Size = UDim2.new(1,-10,0,35)
-espButton.Text = "ESP : OFF"
-espButton.Parent = scrollFrame
-styleButton(espButton)
+local function createButton(text)
+
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1,-10,0,42)
+	button.Text = text
+	button.TextSize = 18
+	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	button.TextColor3 = Color3.new(1,1,1)
+	button.Parent = scrollFrame
+
+	local corner = Instance.new("UICorner")
+	corner.Parent = button
+
+	return button
+end
 
 --------------------------------------------------
--- NAME ESP BUTTON
+-- SETTING FRAME CREATOR
 --------------------------------------------------
 
-local nameButton = Instance.new("TextButton")
-nameButton.Size = UDim2.new(1,-10,0,35)
-nameButton.Text = "Player Names : OFF"
-nameButton.Parent = scrollFrame
-styleButton(nameButton)
+local function createSetting(labelText, defaultValue)
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,-10,0,45)
+	frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	frame.Parent = scrollFrame
+
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.6,0,1,0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextSize = 18
+	label.Font = Enum.Font.SourceSansBold
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Parent = frame
+
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(0.35,-5,0,30)
+	box.Position = UDim2.new(0.65,0,0.5,-15)
+	box.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	box.TextColor3 = Color3.new(1,1,1)
+	box.TextSize = 16
+	box.Text = tostring(defaultValue)
+	box.ClearTextOnFocus = false
+	box.Parent = frame
+
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.Parent = box
+
+	return frame, box
+end
 
 --------------------------------------------------
--- AIM MODE BUTTON
+-- BUTTONS
 --------------------------------------------------
 
-local aimMode = "Disabled"
-
-local aimModeButton = Instance.new("TextButton")
-aimModeButton.Size = UDim2.new(1,-10,0,35)
-aimModeButton.Text = "Aim : Disabled"
-aimModeButton.Parent = scrollFrame
-styleButton(aimModeButton)
+local espButton = createButton("ESP : OFF")
+local nameButton = createButton("Player Names : OFF")
+local aimModeButton = createButton("Aim : Disabled")
+local aimPartButton = createButton("Aim Part : Head")
+local circleButton = createButton("Aim Circle : ON")
 
 --------------------------------------------------
--- AIM PART BUTTON
+-- SETTINGS
 --------------------------------------------------
 
-local aimPartButton = Instance.new("TextButton")
-aimPartButton.Size = UDim2.new(1,-10,0,35)
-aimPartButton.Text = "Aim Part : Head"
-aimPartButton.Parent = scrollFrame
-styleButton(aimPartButton)
+local predictionFrame, predictionBox = createSetting("Prediction:", Prediction)
+
+local headOffsetFrame, headOffsetBox =
+	createSetting("Head Offset:", string.format("%.2f", HeadOffset.Y))
+
+local circleSizeFrame, circleSizeBox =
+	createSetting("Circle Size:", CircleSize)
 
 --------------------------------------------------
--- AIM CIRCLE TOGGLE BUTTON
+-- HITBOX
 --------------------------------------------------
 
-local circleButton = Instance.new("TextButton")
-circleButton.Size = UDim2.new(1,-10,0,35)
-circleButton.Text = "Aim Circle : ON"
-circleButton.Parent = scrollFrame
-styleButton(circleButton)
+local hitboxButton = createButton("Hitbox : OFF")
+local hitboxVisibleButton = createButton("Hitbox Visible : ON")
+
+local hitboxSizeFrame, hitboxSizeBox =
+	createSetting("Hitbox Size:", shared.HitboxSettings.Size)
 
 --------------------------------------------------
--- HITBOX TOGGLE BUTTON
+-- BOW MODE
 --------------------------------------------------
 
-local hitboxButton = Instance.new("TextButton")
-hitboxButton.Size = UDim2.new(1,-10,0,35)
-hitboxButton.Text = "Hitbox : OFF"
-hitboxButton.Parent = scrollFrame
-styleButton(hitboxButton)
-
---------------------------------------------------
--- HITBOX VISIBILITY BUTTON
---------------------------------------------------
-
-local hitboxVisibleButton = Instance.new("TextButton")
-hitboxVisibleButton.Size = UDim2.new(1,-10,0,35)
-hitboxVisibleButton.Text = "Hitbox Visible : ON"
-hitboxVisibleButton.Parent = scrollFrame
-styleButton(hitboxVisibleButton)
-
---------------------------------------------------
--- BOW MODE BUTTON
---------------------------------------------------
-
-local bowButton = Instance.new("TextButton")
-bowButton.Size = UDim2.new(1,-10,0,35)
-bowButton.Text = "Bow Mode : OFF"
-bowButton.Parent = scrollFrame
-styleButton(bowButton)
+local bowButton = createButton("Bow Mode : OFF")
 
 --------------------------------------------------
 -- CLOSE BUTTON
 --------------------------------------------------
 
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0,60,0,30)
-closeButton.Position = UDim2.new(0,290,0.5,-80)
+closeButton.Size = UDim2.new(0,90,0,40)
+closeButton.Position = UDim2.new(0,450,0.5,-200)
 closeButton.Text = "Close"
+closeButton.TextSize = 18
+closeButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+closeButton.TextColor3 = Color3.new(1,1,1)
 closeButton.Parent = mainGui
 closeButton.Visible = false
-styleButton(closeButton)
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.Parent = closeButton
 
 --------------------------------------------------
 -- BUTTON LOGIC
@@ -334,6 +288,35 @@ end)
 closeButton.MouseButton1Click:Connect(function()
 	menuFrame.Visible = false
 	closeButton.Visible = false
+end)
+
+--------------------------------------------------
+-- AIM MODE LOGIC
+--------------------------------------------------
+
+local aimMode = "Disabled"
+
+aimModeButton.MouseButton1Click:Connect(function()
+
+	if aimMode == "Disabled" then
+		aimMode = "Lock"
+		aimModeButton.Text = "Aim : Lock"
+		SilentAimEnabled = false
+
+	elseif aimMode == "Lock" then
+		aimMode = "Silent"
+		aimModeButton.Text = "Aim : Silent"
+		SilentAimEnabled = true
+
+	elseif aimMode == "Silent" then
+		aimMode = "Disabled"
+		aimModeButton.Text = "Aim : Disabled"
+		SilentAimEnabled = false
+
+		aiming = false
+		lockedTarget = nil
+	end
+
 end)
 
 --------------------------------------------------
