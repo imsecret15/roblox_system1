@@ -13,6 +13,36 @@ local camera = workspace.CurrentCamera
 --------------------------------------------------
 
 --------------------------------------------------
+-- UI STYLE FUNCTION
+--------------------------------------------------
+
+local function styleButton(btn)
+
+	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = btn
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(70,70,70)
+	stroke.Thickness = 1
+	stroke.Parent = btn
+
+	btn.MouseEnter:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	end)
+
+	btn.MouseLeave:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	end)
+
+end
+
+--------------------------------------------------
 -- CIRCLE VISIBLE SETTINGS
 --------------------------------------------------
 
@@ -120,13 +150,8 @@ local openButton = Instance.new("TextButton")
 openButton.Size = UDim2.new(0,40,0,40)
 openButton.Position = UDim2.new(0,10,0.5,-20)
 openButton.Text = "≡"
-openButton.TextScaled = true
-openButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-openButton.TextColor3 = Color3.new(1,1,1)
 openButton.Parent = mainGui
-
-local openCorner = Instance.new("UICorner")
-openCorner.Parent = openButton
+styleButton(openButton)
 
 --------------------------------------------------
 -- MENU FRAME
@@ -138,6 +163,45 @@ menuFrame.Position = UDim2.new(0,60,0.5,-90)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 menuFrame.Visible = false
 menuFrame.Parent = mainGui
+
+--------------------------------------------------
+-- DRAG SYSTEM
+--------------------------------------------------
+
+local dragging = false
+local dragStart
+local startPos
+
+menuFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = menuFrame.Position
+	end
+end)
+
+menuFrame.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+		local delta = input.Position - dragStart
+
+		menuFrame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+
+	end
+
+end)
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.Parent = menuFrame
@@ -171,12 +235,8 @@ end)
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(1,-10,0,35)
 espButton.Text = "ESP : OFF"
-espButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-espButton.TextColor3 = Color3.new(1,1,1)
 espButton.Parent = scrollFrame
-
-local espCorner = Instance.new("UICorner")
-espCorner.Parent = espButton
+styleButton(espButton)
 
 --------------------------------------------------
 -- NAME ESP BUTTON
@@ -185,12 +245,8 @@ espCorner.Parent = espButton
 local nameButton = Instance.new("TextButton")
 nameButton.Size = UDim2.new(1,-10,0,35)
 nameButton.Text = "Player Names : OFF"
-nameButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-nameButton.TextColor3 = Color3.new(1,1,1)
 nameButton.Parent = scrollFrame
-
-local nameCorner = Instance.new("UICorner")
-nameCorner.Parent = nameButton
+styleButton(nameButton)
 
 --------------------------------------------------
 -- AIM MODE BUTTON
@@ -201,39 +257,8 @@ local aimMode = "Disabled"
 local aimModeButton = Instance.new("TextButton")
 aimModeButton.Size = UDim2.new(1,-10,0,35)
 aimModeButton.Text = "Aim : Disabled"
-aimModeButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-aimModeButton.TextColor3 = Color3.new(1,1,1)
 aimModeButton.Parent = scrollFrame
-
-local aimModeCorner = Instance.new("UICorner")
-aimModeCorner.Parent = aimModeButton
-
---------------------------------------------------
--- AIM MODE BUTTON LOGIC
---------------------------------------------------
-
-aimModeButton.MouseButton1Click:Connect(function()
-
-	if aimMode == "Disabled" then
-		aimMode = "Lock"
-		aimModeButton.Text = "Aim : Lock"
-		SilentAimEnabled = false
-
-	elseif aimMode == "Lock" then
-		aimMode = "Silent"
-		aimModeButton.Text = "Aim : Silent"
-		SilentAimEnabled = true
-
-	elseif aimMode == "Silent" then
-		aimMode = "Disabled"
-		aimModeButton.Text = "Aim : Disabled"
-		SilentAimEnabled = false
-
-		aiming = false
-		lockedTarget = nil
-	end
-
-end)
+styleButton(aimModeButton)
 
 --------------------------------------------------
 -- AIM PART BUTTON
@@ -242,12 +267,8 @@ end)
 local aimPartButton = Instance.new("TextButton")
 aimPartButton.Size = UDim2.new(1,-10,0,35)
 aimPartButton.Text = "Aim Part : Head"
-aimPartButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-aimPartButton.TextColor3 = Color3.new(1,1,1)
 aimPartButton.Parent = scrollFrame
-
-local aimCorner = Instance.new("UICorner")
-aimCorner.Parent = aimPartButton
+styleButton(aimPartButton)
 
 --------------------------------------------------
 -- AIM CIRCLE TOGGLE BUTTON
@@ -256,115 +277,8 @@ aimCorner.Parent = aimPartButton
 local circleButton = Instance.new("TextButton")
 circleButton.Size = UDim2.new(1,-10,0,35)
 circleButton.Text = "Aim Circle : ON"
-circleButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-circleButton.TextColor3 = Color3.new(1,1,1)
 circleButton.Parent = scrollFrame
-
-local circleCorner = Instance.new("UICorner")
-circleCorner.Parent = circleButton
-
---------------------------------------------------
--- PREDICTION SETTING
---------------------------------------------------
-
-local predictionFrame = Instance.new("Frame")
-predictionFrame.Size = UDim2.new(1,-10,0,35)
-predictionFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-predictionFrame.Parent = scrollFrame
-
-local frameCorner = Instance.new("UICorner")
-frameCorner.Parent = predictionFrame
-
--- Label
-
-local predictionLabel = Instance.new("TextLabel")
-predictionLabel.Size = UDim2.new(0.6,0,1,0)
-predictionLabel.BackgroundTransparency = 1
-predictionLabel.Text = "Prediction:"
-predictionLabel.TextColor3 = Color3.new(1,1,1)
-predictionLabel.TextScaled = true
-predictionLabel.Parent = predictionFrame
-
--- Textbox
-
-local predictionBox = Instance.new("TextBox")
-predictionBox.Size = UDim2.new(0.4,-5,0.8,0)
-predictionBox.Position = UDim2.new(0.6,5,0.1,0)
-predictionBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-predictionBox.TextColor3 = Color3.new(1,1,1)
-predictionBox.Text = tostring(Prediction)
-predictionBox.TextScaled = true
-predictionBox.ClearTextOnFocus = false
-predictionBox.Parent = predictionFrame
-
-local boxCorner = Instance.new("UICorner")
-boxCorner.Parent = predictionBox
-
---------------------------------------------------
--- HEAD OFFSET SETTING
---------------------------------------------------
-
-local headOffsetFrame = Instance.new("Frame")
-headOffsetFrame.Size = UDim2.new(1,-10,0,35)
-headOffsetFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-headOffsetFrame.Parent = scrollFrame
-
-local headFrameCorner = Instance.new("UICorner")
-headFrameCorner.Parent = headOffsetFrame
-
-local headOffsetLabel = Instance.new("TextLabel")
-headOffsetLabel.Size = UDim2.new(0.6,0,1,0)
-headOffsetLabel.BackgroundTransparency = 1
-headOffsetLabel.Text = "Head Offset:"
-headOffsetLabel.TextColor3 = Color3.new(1,1,1)
-headOffsetLabel.TextScaled = true
-headOffsetLabel.Parent = headOffsetFrame
-
-local headOffsetBox = Instance.new("TextBox")
-headOffsetBox.Size = UDim2.new(0.4,-5,0.8,0)
-headOffsetBox.Position = UDim2.new(0.6,5,0.1,0)
-headOffsetBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-headOffsetBox.TextColor3 = Color3.new(1,1,1)
-headOffsetBox.Text = string.format("%.2f", HeadOffset.Y)
-headOffsetBox.TextScaled = true
-headOffsetBox.ClearTextOnFocus = false
-headOffsetBox.Parent = headOffsetFrame
-
-local headBoxCorner = Instance.new("UICorner")
-headBoxCorner.Parent = headOffsetBox
-
---------------------------------------------------
--- AIM CIRCLE SIZE SETTING
---------------------------------------------------
-
-local circleSizeFrame = Instance.new("Frame")
-circleSizeFrame.Size = UDim2.new(1,-10,0,35)
-circleSizeFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-circleSizeFrame.Parent = scrollFrame
-
-local circleFrameCorner = Instance.new("UICorner")
-circleFrameCorner.Parent = circleSizeFrame
-
-local circleSizeLabel = Instance.new("TextLabel")
-circleSizeLabel.Size = UDim2.new(0.6,0,1,0)
-circleSizeLabel.BackgroundTransparency = 1
-circleSizeLabel.Text = "Circle Size:"
-circleSizeLabel.TextColor3 = Color3.new(1,1,1)
-circleSizeLabel.TextScaled = true
-circleSizeLabel.Parent = circleSizeFrame
-
-local circleSizeBox = Instance.new("TextBox")
-circleSizeBox.Size = UDim2.new(0.4,-5,0.8,0)
-circleSizeBox.Position = UDim2.new(0.6,5,0.1,0)
-circleSizeBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-circleSizeBox.TextColor3 = Color3.new(1,1,1)
-circleSizeBox.Text = tostring(CircleSize)
-circleSizeBox.TextScaled = true
-circleSizeBox.ClearTextOnFocus = false
-circleSizeBox.Parent = circleSizeFrame
-
-local circleBoxCorner = Instance.new("UICorner")
-circleBoxCorner.Parent = circleSizeBox
+styleButton(circleButton)
 
 --------------------------------------------------
 -- HITBOX TOGGLE BUTTON
@@ -373,24 +287,8 @@ circleBoxCorner.Parent = circleSizeBox
 local hitboxButton = Instance.new("TextButton")
 hitboxButton.Size = UDim2.new(1,-10,0,35)
 hitboxButton.Text = "Hitbox : OFF"
-hitboxButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-hitboxButton.TextColor3 = Color3.new(1,1,1)
 hitboxButton.Parent = scrollFrame
-
-local hitboxCorner = Instance.new("UICorner")
-hitboxCorner.Parent = hitboxButton
-
-hitboxButton.MouseButton1Click:Connect(function()
-
-	shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
-
-	if shared.HitboxSettings.Enabled then
-		hitboxButton.Text = "Hitbox : ON"
-	else
-		hitboxButton.Text = "Hitbox : OFF"
-	end
-
-end)
+styleButton(hitboxButton)
 
 --------------------------------------------------
 -- HITBOX VISIBILITY BUTTON
@@ -399,45 +297,8 @@ end)
 local hitboxVisibleButton = Instance.new("TextButton")
 hitboxVisibleButton.Size = UDim2.new(1,-10,0,35)
 hitboxVisibleButton.Text = "Hitbox Visible : ON"
-hitboxVisibleButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-hitboxVisibleButton.TextColor3 = Color3.new(1,1,1)
 hitboxVisibleButton.Parent = scrollFrame
-
-local visibleCorner = Instance.new("UICorner")
-visibleCorner.Parent = hitboxVisibleButton
-
---------------------------------------------------
--- HITBOX SIZE SETTING
---------------------------------------------------
-
-local hitboxSizeFrame = Instance.new("Frame")
-hitboxSizeFrame.Size = UDim2.new(1,-10,0,35)
-hitboxSizeFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-hitboxSizeFrame.Parent = scrollFrame
-
-local hitboxFrameCorner = Instance.new("UICorner")
-hitboxFrameCorner.Parent = hitboxSizeFrame
-
-local hitboxSizeLabel = Instance.new("TextLabel")
-hitboxSizeLabel.Size = UDim2.new(0.6,0,1,0)
-hitboxSizeLabel.BackgroundTransparency = 1
-hitboxSizeLabel.Text = "Hitbox Size:"
-hitboxSizeLabel.TextColor3 = Color3.new(1,1,1)
-hitboxSizeLabel.TextScaled = true
-hitboxSizeLabel.Parent = hitboxSizeFrame
-
-local hitboxSizeBox = Instance.new("TextBox")
-hitboxSizeBox.Size = UDim2.new(0.4,-5,0.8,0)
-hitboxSizeBox.Position = UDim2.new(0.6,5,0.1,0)
-hitboxSizeBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-hitboxSizeBox.TextColor3 = Color3.new(1,1,1)
-hitboxSizeBox.Text = tostring(HitboxSize)
-hitboxSizeBox.TextScaled = true
-hitboxSizeBox.ClearTextOnFocus = false
-hitboxSizeBox.Parent = hitboxSizeFrame
-
-local hitboxSizeCorner = Instance.new("UICorner")
-hitboxSizeCorner.Parent = hitboxSizeBox
+styleButton(hitboxVisibleButton)
 
 --------------------------------------------------
 -- BOW MODE BUTTON
@@ -446,12 +307,8 @@ hitboxSizeCorner.Parent = hitboxSizeBox
 local bowButton = Instance.new("TextButton")
 bowButton.Size = UDim2.new(1,-10,0,35)
 bowButton.Text = "Bow Mode : OFF"
-bowButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-bowButton.TextColor3 = Color3.new(1,1,1)
 bowButton.Parent = scrollFrame
-
-local bowCorner = Instance.new("UICorner")
-bowCorner.Parent = bowButton
+styleButton(bowButton)
 
 --------------------------------------------------
 -- CLOSE BUTTON
@@ -461,13 +318,9 @@ local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0,60,0,30)
 closeButton.Position = UDim2.new(0,290,0.5,-80)
 closeButton.Text = "Close"
-closeButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-closeButton.TextColor3 = Color3.new(1,1,1)
 closeButton.Parent = mainGui
 closeButton.Visible = false
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.Parent = closeButton
+styleButton(closeButton)
 
 --------------------------------------------------
 -- BUTTON LOGIC
