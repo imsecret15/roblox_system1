@@ -10,6 +10,30 @@ local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
+-- CREATE HITBOX PART
+--------------------------------------------------
+
+local function createPart(parent, size)
+
+	local p = Instance.new("Part")
+	p.Size = size
+	p.Anchored = false
+	p.CanCollide = false
+	p.CanTouch = false
+	p.CanQuery = false
+	p.Massless = true
+
+	p.Color = Color3.fromRGB(255,0,0)
+	p.Material = Enum.Material.Neon
+	p.Transparency = Settings.Visible and 0.4 or 1
+
+	p.Parent = parent
+
+	return p
+
+end
+
+--------------------------------------------------
 -- CREATE HITBOX
 --------------------------------------------------
 
@@ -21,59 +45,61 @@ local function createHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local head = char:FindFirstChild("Head")
-	if not head then return end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
 
-	local hitbox = Instance.new("Part")
-	hitbox.Name = "ExtraHitbox"
-	hitbox.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-	hitbox.Color = Color3.fromRGB(255,0,0)
-	hitbox.Material = Enum.Material.Neon
+	local folder = Instance.new("Folder")
+	folder.Name = "ExtraHitbox"
+	folder.Parent = char
 
-	hitbox.Transparency = Settings.Visible and 0.35 or 1
+	local size = Settings.Size
 
-	hitbox.CanCollide = false
-	hitbox.CanQuery = false
-	hitbox.CanTouch = false
-	hitbox.Anchored = true
-	hitbox.Massless = true
+	local offsets = {
 
-	-- keep arrows from hitting it
-	hitbox.Parent = workspace.CurrentCamera
+		Vector3.new(0,0,0),
+		Vector3.new(size,0,0),
+		Vector3.new(-size,0,0),
 
-	Hitboxes[plr] = hitbox
+		Vector3.new(0,0,size),
+		Vector3.new(0,0,-size),
+
+		Vector3.new(0,size,0),
+		Vector3.new(0,-size,0)
+
+	}
+
+	for _,offset in ipairs(offsets) do
+
+		local part = createPart(folder, Vector3.new(size,size,size))
+
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = root
+		weld.Part1 = part
+		weld.Parent = part
+
+		part.CFrame = root.CFrame * CFrame.new(offset)
+
+	end
+
+	Hitboxes[plr] = folder
 
 end
 
 --------------------------------------------------
--- UPDATE / FOLLOW HEAD
+-- UPDATE VISUALS
 --------------------------------------------------
 
 RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
-	for plr, hitbox in pairs(Hitboxes) do
+	for plr,folder in pairs(Hitboxes) do
 
-		local char = plr.Character
-		if not char then continue end
+		for _,part in pairs(folder:GetChildren()) do
 
-		local head = char:FindFirstChild("Head")
-		if not head then continue end
+			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Transparency = Settings.Visible and 0.4 or 1
 
-		-- follow player
-		hitbox.CFrame = head.CFrame * CFrame.new(0,0,-0.25)
-
-		-- update size if changed
-		local newSize = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-		if hitbox.Size ~= newSize then
-			hitbox.Size = newSize
-		end
-
-		-- update visibility toggle
-		local newTransparency = Settings.Visible and 0.35 or 1
-		if hitbox.Transparency ~= newTransparency then
-			hitbox.Transparency = newTransparency
 		end
 
 	end
@@ -81,15 +107,15 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- REMOVE HITBOX
+-- REMOVE
 --------------------------------------------------
 
 local function removeHitbox(plr)
 
-	local box = Hitboxes[plr]
+	local folder = Hitboxes[plr]
 
-	if box then
-		box:Destroy()
+	if folder then
+		folder:Destroy()
 		Hitboxes[plr] = nil
 	end
 
@@ -102,10 +128,10 @@ end
 local function enableHitbox()
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player then
-			createHitbox(plr)
-		end
+		createHitbox(plr)
 	end
+
+	Enabled = true
 
 end
 
@@ -118,6 +144,8 @@ local function disableHitbox()
 	for plr,_ in pairs(Hitboxes) do
 		removeHitbox(plr)
 	end
+
+	Enabled = false
 
 end
 
@@ -133,11 +161,9 @@ task.spawn(function()
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
-			Enabled = true
 
 		elseif not Settings.Enabled and Enabled then
 			disableHitbox()
-			Enabled = false
 		end
 
 	end
@@ -145,14 +171,14 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN SUPPORT
+-- PLAYER JOIN
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.4)
+		task.wait(0.5)
 
 		if Settings.Enabled then
 			createHitbox(plr)
