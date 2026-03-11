@@ -325,7 +325,7 @@ headOffsetBox.Size = UDim2.new(0.4,-5,0.8,0)
 headOffsetBox.Position = UDim2.new(0.6,5,0.1,0)
 headOffsetBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
 headOffsetBox.TextColor3 = Color3.new(1,1,1)
-headOffsetBox.Text = tostring(HeadOffset.Y)
+headOffsetBox.Text = string.format("%.2f", HeadOffset.Y)
 headOffsetBox.TextScaled = true
 headOffsetBox.ClearTextOnFocus = false
 headOffsetBox.Parent = headOffsetFrame
@@ -489,7 +489,22 @@ end)
 
 predictionBox.FocusLost:Connect(function(enterPressed)
 
-	--------------------------------------------------
+	if enterPressed then
+
+		local value = tonumber(predictionBox.Text)
+
+		if value then
+			Prediction = value
+			predictionBox.Text = tostring(value)
+		else
+			predictionBox.Text = tostring(Prediction)
+		end
+
+	end
+
+end)
+
+--------------------------------------------------
 -- HEAD OFFSET UPDATE
 --------------------------------------------------
 
@@ -500,25 +515,14 @@ headOffsetBox.FocusLost:Connect(function(enterPressed)
 		local value = tonumber(headOffsetBox.Text)
 
 		if value then
+
+			value = math.floor(value * 100 + 0.5) / 100
 			HeadOffset = Vector3.new(0,value,0)
-			headOffsetBox.Text = tostring(value)
+
+			headOffsetBox.Text = string.format("%.2f", value)
+
 		else
-			headOffsetBox.Text = tostring(HeadOffset.Y)
-		end
-
-	end
-
-end)
-
-	if enterPressed then
-
-		local value = tonumber(predictionBox.Text)
-
-		if value then
-			Prediction = value
-			predictionBox.Text = tostring(value)
-		else
-			predictionBox.Text = tostring(Prediction)
+			headOffsetBox.Text = string.format("%.2f", HeadOffset.Y)
 		end
 
 	end
