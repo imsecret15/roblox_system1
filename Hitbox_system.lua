@@ -73,6 +73,7 @@ RunService.Heartbeat:Connect(function()
 		local root = char:FindFirstChild("HumanoidRootPart")
 		if not root then continue end
 
+		-- create hitbox if missing
 		if not Hitboxes[plr] then
 			createHitbox(plr)
 		end
@@ -82,19 +83,25 @@ RunService.Heartbeat:Connect(function()
 
 		local part = data.part
 
+		-- fix missing part
 		if not part or not part.Parent then
 			Hitboxes[plr] = nil
+			createHitbox(plr)
 			continue
 		end
 
-		part.CFrame = root.CFrame
+		-- ALWAYS update root reference
+		data.root = root
+
+		-- follow player
+		part.CFrame = data.root.CFrame
+
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 		part.Transparency = Settings.Visible and 0.4 or 1
 
 	end
 
 end)
-
 --------------------------------------------------
 -- REMOVE
 --------------------------------------------------
