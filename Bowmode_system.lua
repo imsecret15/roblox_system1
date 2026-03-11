@@ -11,6 +11,41 @@ local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
+-- INDICATOR
+--------------------------------------------------
+
+local Indicator
+
+local function createIndicator()
+
+	if Indicator then return end
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "BowModeIndicator"
+	gui.ResetOnSpawn = false
+	gui.Parent = game:GetService("CoreGui")
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,10,0,10)
+	frame.Position = UDim2.new(0,10,0,10)
+	frame.BackgroundColor3 = Color3.fromRGB(255,50,50)
+	frame.BorderSizePixel = 0
+	frame.Parent = gui
+
+	Indicator = gui
+
+end
+
+local function removeIndicator()
+
+	if Indicator then
+		Indicator:Destroy()
+		Indicator = nil
+	end
+
+end
+
+--------------------------------------------------
 -- HEAD BOX
 --------------------------------------------------
 
@@ -58,8 +93,13 @@ local function getTargetHead()
 		if head and root then
 			local dist = (head.Position - camPos).Magnitude
 
-			local prediction = root.Velocity * (dist * 0.0025)
-			local drop = Vector3.new(0, dist * 0.0015, 0)
+			local vel = root.AssemblyLinearVelocity
+			local speed = vel.Magnitude
+
+			local time = dist / 180
+			local prediction = vel * time
+
+			local drop = Vector3.new(0, (dist * 0.002) + (speed * 0.003), 0)
 
 			return {
 				head = head,
@@ -86,8 +126,13 @@ local function getTargetHead()
 				if dist < bestDist then
 					bestDist = dist
 
-					local prediction = root.Velocity * (dist * 0.0025)
-					local drop = Vector3.new(0, dist * 0.0015, 0)
+					local vel = root.AssemblyLinearVelocity
+					local speed = vel.Magnitude
+
+					local time = dist / 180
+					local prediction = vel * time
+
+					local drop = Vector3.new(0, (dist * 0.002) + (speed * 0.003), 0)
 
 					closest = {
 						head = head,
@@ -184,6 +229,7 @@ Players.PlayerAdded:Connect(connect)
 local function enable()
 
 	Enabled = true
+	createIndicator()
 
 	for _,plr in pairs(Players:GetPlayers()) do
 		createBox(plr)
@@ -194,6 +240,7 @@ end
 local function disable()
 
 	Enabled = false
+	removeIndicator()
 
 	for _,v in pairs(Boxes) do
 		v:Destroy()
