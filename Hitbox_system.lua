@@ -169,3 +169,83 @@ end)
 Players.PlayerRemoving:Connect(function(plr)
 	removeHitbox(plr)
 end)
+
+--------------------------------------------------
+-- LONG BOW ASSIST
+--------------------------------------------------
+
+local function getClosestHitbox()
+
+	local closest = nil
+	local shortest = math.huge
+
+	local mouse = player:GetMouse()
+
+	for plr, hitbox in pairs(Hitboxes) do
+		if plr ~= player and plr.Character then
+
+			local pos, visible = workspace.CurrentCamera:WorldToViewportPoint(hitbox.Position)
+
+			if visible then
+				local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+
+				if dist < shortest then
+					shortest = dist
+					closest = plr
+				end
+			end
+
+		end
+	end
+
+	return closest
+
+end
+
+
+local function setupBow(tool)
+
+	if tool.Name ~= "Long Bow" then return end
+
+	tool.Activated:Connect(function()
+
+		local target = getClosestHitbox()
+
+		if target and target.Character then
+			local head = target.Character:FindFirstChild("Head")
+
+			if head then
+				workspace.CurrentCamera.CFrame = CFrame.new(
+					workspace.CurrentCamera.CFrame.Position,
+					head.Position
+				)
+			end
+		end
+
+	end)
+
+end
+
+
+local function checkCharacter(char)
+
+	for _,tool in pairs(char:GetChildren()) do
+		if tool:IsA("Tool") then
+			setupBow(tool)
+		end
+	end
+
+	char.ChildAdded:Connect(function(child)
+		if child:IsA("Tool") then
+			setupBow(child)
+		end
+	end)
+
+end
+
+
+if player.Character then
+	checkCharacter(player.Character)
+end
+
+player.CharacterAdded:Connect(checkCharacter)
