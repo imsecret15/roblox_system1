@@ -1,29 +1,86 @@
 -- Bowmode_system.lua
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local Settings
-repeat task.wait() until shared.BowModeSettings
-Settings = shared.BowModeSettings
+repeat
+	task.wait()
+	Settings = shared.BowModeSettings
+until Settings
 
+local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- FIND TARGET
+-- CONFIG (tune if needed)
+--------------------------------------------------
+
+local DROP_MULTIPLIER = 0.018
+
+--------------------------------------------------
+-- CREATE HEAD BOX
+--------------------------------------------------
+
+local function createBox(plr)
+
+	if plr == player then return end
+	if not plr.Character then return end
+
+	local head = plr.Character:FindFirstChild("Head")
+	if not head then return end
+
+	if Boxes[plr] then
+		if Boxes[plr].Adornee == head then return end
+		Boxes[plr]:Destroy()
+	end
+
+	local box = Instance.new("BoxHandleAdornment")
+	box.Name = "BowModeBox"
+	box.Adornee = head
+	box.AlwaysOnTop = true
+	box.ZIndex = 10
+	box.Size = Vector3.new(3,3,3)
+	box.Color3 = Color3.fromRGB(255,50,50)
+	box.Transparency = Settings.Visible and 0.4 or 1
+	box.Parent = head
+
+	Boxes[plr] = box
+
+end
+
+--------------------------------------------------
+-- CLEANUP
+--------------------------------------------------
+
+local function removeBox(plr)
+
+	if Boxes[plr] then
+		Boxes[plr]:Destroy()
+		Boxes[plr] = nil
+	end
+
+end
+
+--------------------------------------------------
+-- TARGET SELECTION
 --------------------------------------------------
 
 local function getTargetHead()
 
 	if shared.AimTarget and shared.AimTarget.Character then
-		return shared.AimTarget.Character:FindFirstChild("Head")
+		local head = shared.AimTarget.Character:FindFirstChild("Head")
+		if head then return head end
 	end
 
 	local closest
 	local shortest = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
+
 		if plr ~= player and plr.Character then
 
 			local head = plr.Character:FindFirstChild("Head")
@@ -39,38 +96,128 @@ local function getTargetHead()
 				shortest = dist
 				closest = head
 			end
+
 		end
+
 	end
 
 	return closest
+
 end
 
 --------------------------------------------------
--- REMOTE HOOK
+-- DROP COMPENSATION
 --------------------------------------------------
 
-local old
-old = hookmetamethod(game,"__namecall",function(self,...)
+local function getPredictedPosition(head)
 
-	local args = {...}
-	local method = getnamecallmethod()
+	local distance = (head.Position - camera.CFrame.Position).Magnitude
+	local drop = distance * DROP_MULTIPLIER
 
-	if Enabled and method == "FireServer" then
+	return head.Position + Vector3.new(0,drop,0)
 
-		if self.Name == "mouse" or self.Name == "hit" then
+end
 
-			local head = getTargetHead()
+--------------------------------------------------
+-- ARROW REDIRECT
+--------------------------------------------------
 
-			if head then
-				args[1] = head.Position
-			end
+workspace.ChildAdded:Connect(function(obj)
 
-			return old(self,unpack(args))
+	if not Enabled then return end
+	if not obj:IsA("BasePart") then return end
+
+	local name = obj.Name:lower()
+
+	if name:find("arrow") or name:find("projectile") then
+
+		local head = getTargetHead()
+
+		if head then
+
+			local predicted = getPredictedPosition(head)
+
+			local dir = (predicted - camera.CFrame.Position).Unit
+
+			obj.CFrame = CFrame.new(
+				camera.CFrame.Position + dir * 5,
+				predicted
+			)
+
+		end
+
+	end
+
+end)
+
+--------------------------------------------------
+-- UPDATE BOXES
+--------------------------------------------------
+
+RunService.RenderStepped:Connect(function()
+
+	if not Enabled then return end
+
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr ~= player then
+			createBox(plr)
 		end
 	end
 
-	return old(self,...)
 end)
+
+--------------------------------------------------
+-- RESPAWN SUPPORT
+--------------------------------------------------
+
+local function connectPlayer(plr)
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(0.5)
+
+		if Enabled then
+			createBox(plr)
+		end
+
+	end)
+
+end
+
+for _,plr in pairs(Players:GetPlayers()) do
+	if plr ~= player then
+		connectPlayer(plr)
+	end
+end
+
+Players.PlayerAdded:Connect(connectPlayer)
+Players.PlayerRemoving:Connect(removeBox)
+
+--------------------------------------------------
+-- ENABLE / DISABLE
+--------------------------------------------------
+
+local function enable()
+
+	Enabled = true
+
+	for _,plr in pairs(Players:GetPlayers()) do
+		createBox(plr)
+	end
+
+end
+
+local function disable()
+
+	Enabled = false
+
+	for _,box in pairs(Boxes) do
+		box:Destroy()
+	end
+
+	table.clear(Boxes)
+
+end
 
 --------------------------------------------------
 -- SETTINGS WATCHER
@@ -79,9 +226,16 @@ end)
 task.spawn(function()
 
 	while true do
+
 		task.wait(0.15)
 
-		Enabled = Settings.Enabled
+		if Settings.Enabled and not Enabled then
+			enable()
+
+		elseif not Settings.Enabled and Enabled then
+			disable()
+		end
+
 	end
 
 end)
