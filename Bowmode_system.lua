@@ -66,6 +66,8 @@ local function getTargetHead()
 
 	end
 
+	------------------------------------------------
+
 	local closest
 	local bestDist = math.huge
 
@@ -87,7 +89,7 @@ local function getTargetHead()
 					local vel = root.AssemblyLinearVelocity
 					local speed = vel.Magnitude
 
-					local travelTime = dist / 110
+					local travelTime = dist / 120
 
 					local prediction = vel * travelTime
 
