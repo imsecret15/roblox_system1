@@ -8,12 +8,23 @@ local player = Players.LocalPlayer
 local Hitboxes = {}
 
 --------------------------------------------------
--- WAIT FOR SETTINGS (IMPORTANT)
+-- SAFE SETTINGS
 --------------------------------------------------
 
-repeat task.wait() until shared.HitboxSettings
+local function getSettings()
 
-local Settings = shared.HitboxSettings
+	if shared and shared.HitboxSettings then
+		return shared.HitboxSettings
+	end
+
+	-- fallback so script never crashes
+	return {
+		Enabled = false,
+		Visible = true,
+		Size = 5
+	}
+
+end
 
 --------------------------------------------------
 -- CREATE HITBOX
@@ -57,6 +68,8 @@ local function createHitbox(plr)
 		Vector3.new(0,-1,0)
 	}
 
+	local Settings = getSettings()
+
 	for _,offset in ipairs(offsets) do
 
 		local part = Instance.new("Part")
@@ -95,6 +108,8 @@ end
 
 RunService.RenderStepped:Connect(function()
 
+	local Settings = getSettings()
+
 	if not Settings.Enabled then return end
 
 	for _,plr in pairs(Players:GetPlayers()) do
@@ -126,6 +141,7 @@ RunService.RenderStepped:Connect(function()
 				local offset = info.offset
 
 				part.CFrame = root.CFrame * CFrame.new(offset)
+
 				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 				part.Transparency = Settings.Visible and 0.4 or 1
 
