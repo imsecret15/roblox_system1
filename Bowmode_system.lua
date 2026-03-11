@@ -126,8 +126,16 @@ workspace.ChildAdded:Connect(function(obj)
 
 		local head = getClosestHead()
 
-		if head then
-			obj.CFrame = head.CFrame
+		if head and obj:IsA("BasePart") then
+
+			-- place arrow slightly in front of head
+			local direction = (head.Position - workspace.CurrentCamera.CFrame.Position).Unit
+
+			obj.CFrame = CFrame.new(
+				head.Position - direction * 2,
+				head.Position
+			)
+
 		end
 
 	end
