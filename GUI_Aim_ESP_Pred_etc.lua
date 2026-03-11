@@ -68,16 +68,41 @@ shared.HitboxSettings = {
 }
 
 --------------------------------------------------
--- BOW MODE
+-- BOW MODE SETTINGS
 --------------------------------------------------
 
-local BowMode = false
+shared.BowModeSettings = {
+	Enabled = false,
+	Visible = true
+}
 
 --------------------------------------------------
 -- LOAD HITBOX SYSTEM
 --------------------------------------------------
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/Hitbox_system.lua"))()
+task.spawn(function()
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/Hitbox_system.lua"))()
+    end)
+
+    if not success then
+        warn("Hitbox system failed:", err)
+    end
+end)
+
+--------------------------------------------------
+-- LOAD BOWMODE SYSTEM
+--------------------------------------------------
+
+task.spawn(function()
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/Bowmode_system.lua"))()
+    end)
+
+    if not success then
+        warn("Bowmode system failed:", err)
+    end
+end)
 
 --------------------------------------------------
 -- MAIN GUI
@@ -716,9 +741,9 @@ end)
 
 bowButton.MouseButton1Click:Connect(function()
 
-	BowMode = not BowMode
+	shared.BowModeSettings.Enabled = not shared.BowModeSettings.Enabled
 
-	if BowMode then
+	if shared.BowModeSettings.Enabled then
 		bowButton.Text = "Bow Mode : ON"
 	else
 		bowButton.Text = "Bow Mode : OFF"
