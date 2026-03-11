@@ -13,44 +13,6 @@ local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- INDICATOR
---------------------------------------------------
-
-local Indicator
-
-local function createIndicator()
-
-	if Indicator then return end
-
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "BowModeIndicator"
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 999
-	gui.IgnoreGuiInset = true
-	gui.Parent = player:WaitForChild("PlayerGui")
-
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0,12,0,12)
-	frame.AnchorPoint = Vector2.new(0,0)
-	frame.Position = UDim2.new(0,10,0,10)
-	frame.BackgroundColor3 = Color3.fromRGB(255,50,50)
-	frame.BorderSizePixel = 0
-	frame.Parent = gui
-
-	Indicator = gui
-
-end
-
-local function removeIndicator()
-
-	if Indicator then
-		Indicator:Destroy()
-		Indicator = nil
-	end
-
-end
-
---------------------------------------------------
 -- HEAD BOX
 --------------------------------------------------
 
@@ -104,8 +66,6 @@ local function getTargetHead()
 
 	end
 
-	------------------------------------------------
-
 	local closest
 	local bestDist = math.huge
 
@@ -127,7 +87,7 @@ local function getTargetHead()
 					local vel = root.AssemblyLinearVelocity
 					local speed = vel.Magnitude
 
-					local travelTime = dist / 120
+					local travelTime = dist / 110
 
 					local prediction = vel * travelTime
 
@@ -235,7 +195,6 @@ Players.PlayerAdded:Connect(connect)
 local function enable()
 
 	Enabled = true
-	createIndicator()
 
 	for _,plr in pairs(Players:GetPlayers()) do
 		createBox(plr)
@@ -246,7 +205,6 @@ end
 local function disable()
 
 	Enabled = false
-	removeIndicator()
 
 	for _,v in pairs(Boxes) do
 		v:Destroy()
