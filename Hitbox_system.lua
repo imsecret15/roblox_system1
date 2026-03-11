@@ -31,20 +31,22 @@ local function createHitbox(plr)
 	if Hitboxes[plr] then return end
 
 	local part = Instance.new("Part")
-	part.Name = "ExtraHitbox"
+part.Name = "ExtraHitbox"
 
-	part.Anchored = true
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = true
+part.Anchored = true
+part.CanCollide = false
+part.CanTouch = false
+part.CanQuery = false
 
-	part.Material = Enum.Material.Neon
-	part.Color = Color3.fromRGB(255,0,0)
+part.Material = Enum.Material.Neon
+part.Color = Color3.fromRGB(255,0,0)
 
-	part.Transparency = Settings.Visible and 0.4 or 1
-	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+part.Transparency = 0
+part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
 
-	part.Parent = workspace
+part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+part.Parent = workspace
 
 	part.CFrame = root.CFrame
 
@@ -59,7 +61,7 @@ end
 -- UPDATE
 --------------------------------------------------
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
@@ -97,7 +99,7 @@ RunService.Heartbeat:Connect(function()
 		part.CFrame = data.root.CFrame
 
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-		part.Transparency = Settings.Visible and 0.4 or 1
+		part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
 
 	end
 
