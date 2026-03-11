@@ -2,9 +2,9 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local PhysicsService = game:GetService("PhysicsService")
 
 local player = Players.LocalPlayer
+
 local Settings
 repeat
 	task.wait()
@@ -13,18 +13,6 @@ until Settings
 
 local Hitboxes = {}
 local Enabled = false
-
---------------------------------------------------
--- COLLISION GROUP SETUP
---------------------------------------------------
-
-pcall(function()
-	PhysicsService:CreateCollisionGroup("HitboxGhost")
-end)
-
-pcall(function()
-	PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
-end)
 
 --------------------------------------------------
 -- CREATE HITBOX
@@ -37,74 +25,36 @@ local function createHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local root =
-		char:FindFirstChild("HumanoidRootPart")
-		or char:FindFirstChild("UpperTorso")
-		or char:FindFirstChild("Torso")
-		or char:FindFirstChild("LowerTorso")
-		or char:FindFirstChild("Head")
-
+	local root = char:FindFirstChild("HumanoidRootPart")
 	if not root then return end
 
-	-- remove old
-	if Hitboxes[plr] then
-		if Hitboxes[plr].folder then
-			Hitboxes[plr].folder:Destroy()
-		end
-	end
+	if Hitboxes[plr] then return end
 
-	local folder = Instance.new("Folder")
-	folder.Name = "ExtraHitbox"
-	folder.Parent = workspace
+	local originalSize = root.Size
 
-	local parts = {}
+	local visual = Instance.new("BoxHandleAdornment")
+	visual.Name = "HitboxVisual"
+	visual.Adornee = root
+	visual.AlwaysOnTop = true
+	visual.ZIndex = 10
+	visual.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+	visual.Transparency = Settings.Visible and 0.4 or 1
+	visual.Color3 = Color3.fromRGB(255,0,0)
+	visual.Parent = root
 
-	local offsets = {
-		Vector3.new(0,0,0),
-		Vector3.new(1,0,0),
-		Vector3.new(-1,0,0),
-		Vector3.new(0,0,1),
-		Vector3.new(0,0,-1),
-		Vector3.new(0,1,0),
-		Vector3.new(0,-1,0)
-	}
-
-	for _,offset in ipairs(offsets) do
-
-		local part = Instance.new("Part")
-
-		part.Anchored = true
-		part.CanCollide = false
-		part.CanTouch = false
-		part.CanQuery = false
-
-		PhysicsService:SetPartCollisionGroup(part,"HitboxGhost")
-
-		part.Material = Enum.Material.Neon
-		part.Color = Color3.fromRGB(255,0,0)
-
-		part.Transparency = Settings.Visible and 0.4 or 1
-		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-
-		part.Parent = folder
-
-		table.insert(parts,{
-			part = part,
-			offset = offset
-		})
-
-	end
+	root.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+	root.Massless = true
 
 	Hitboxes[plr] = {
 		root = root,
-		parts = parts,
-		folder = folder
+		originalSize = originalSize,
+		visual = visual
 	}
 
 end
 
 --------------------------------------------------
--- UPDATE + AUTO CREATE
+-- UPDATE
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
@@ -118,13 +68,7 @@ RunService.RenderStepped:Connect(function()
 			local char = plr.Character
 			if not char then continue end
 
-			local root =
-				char:FindFirstChild("HumanoidRootPart")
-				or char:FindFirstChild("UpperTorso")
-				or char:FindFirstChild("Torso")
-				or char:FindFirstChild("LowerTorso")
-				or char:FindFirstChild("Head")
-
+			local root = char:FindFirstChild("HumanoidRootPart")
 			if not root then continue end
 
 			if not Hitboxes[plr] then
@@ -136,15 +80,13 @@ RunService.RenderStepped:Connect(function()
 
 			data.root = root
 
-			for _,info in pairs(data.parts) do
+			local newSize = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-				local part = info.part
-				local offset = info.offset
+			root.Size = newSize
 
-				part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
-				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-				part.Transparency = Settings.Visible and 0.4 or 1
-
+			if data.visual then
+				data.visual.Size = newSize
+				data.visual.Transparency = Settings.Visible and 0.4 or 1
 			end
 
 		end
@@ -160,13 +102,17 @@ end)
 local function removeHitbox(plr)
 
 	local data = Hitboxes[plr]
+	if not data then return end
 
-	if data then
-		if data.folder then
-			data.folder:Destroy()
-		end
-		Hitboxes[plr] = nil
+	if data.visual then
+		data.visual:Destroy()
 	end
+
+	if data.root and data.root.Parent then
+		data.root.Size = data.originalSize
+	end
+
+	Hitboxes[plr] = nil
 
 end
 
