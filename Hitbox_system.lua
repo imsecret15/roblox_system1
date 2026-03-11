@@ -133,11 +133,23 @@ RunService.RenderStepped:Connect(function()
 		end
 
 		-- live update size
-		data.root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+data.root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-		if data.visual then
-			data.visual.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-		end
+-- handle visibility toggle
+if Settings.Visible then
+	if not data.visual then
+		data.visual = createVisual(data.root)
+	end
+else
+	if data.visual then
+		data.visual:Destroy()
+		data.visual = nil
+	end
+end
+
+if data.visual then
+	data.visual.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+end
 
 	end
 
