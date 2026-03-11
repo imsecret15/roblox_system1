@@ -47,28 +47,53 @@ end
 
 local function getTargetHead()
 
+	local cam = workspace.CurrentCamera
+	local camPos = cam.CFrame.Position
+
 	-- priority: aimlock
 	if shared.AimTarget and shared.AimTarget.Character then
 		local head = shared.AimTarget.Character:FindFirstChild("Head")
-		if head then return head end
+		local root = shared.AimTarget.Character:FindFirstChild("HumanoidRootPart")
+
+		if head and root then
+			local dist = (head.Position - camPos).Magnitude
+
+			local prediction = root.Velocity * (dist * 0.0025)
+			local drop = Vector3.new(0, dist * 0.0015, 0)
+
+			return {
+				head = head,
+				position = head.Position + prediction + drop
+			}
+		end
 	end
 
 	-- fallback: closest player
 	local closest
-	local dist = math.huge
+	local bestDist = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
 		if plr ~= player and plr.Character then
 
 			local head = plr.Character:FindFirstChild("Head")
-			if head then
+			local root = plr.Character:FindFirstChild("HumanoidRootPart")
 
-				local mag = (head.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
+			if head and root then
 
-				if mag < dist then
-					dist = mag
-					closest = head
+				local dist = (head.Position - camPos).Magnitude
+
+				if dist < bestDist then
+					bestDist = dist
+
+					local prediction = root.Velocity * (dist * 0.0025)
+					local drop = Vector3.new(0, dist * 0.0015, 0)
+
+					closest = {
+						head = head,
+						position = head.Position + prediction + drop
+					}
+
 				end
 
 			end
@@ -99,10 +124,10 @@ mt.__namecall = newcclosure(function(self,...)
 
 		if typeof(args[3]) == "string" and args[3] == "S" then
 
-			local head = getTargetHead()
+			local target = getTargetHead()
 
-			if head then
-				args[1] = head.Position
+			if target then
+				args[1] = target.position
 			end
 
 			return old(self,unpack(args))
