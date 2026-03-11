@@ -38,7 +38,7 @@ local function createHitbox(plr)
 
 	local folder = Instance.new("Folder")
 	folder.Name = "ExtraHitbox"
-	folder.Parent = char -- IMPORTANT FIX
+	folder.Parent = workspace
 
 	local parts = {}
 
@@ -56,7 +56,7 @@ local function createHitbox(plr)
 
 		local part = Instance.new("Part")
 
-		part.Anchored = false
+		part.Anchored = true
 		part.CanCollide = false
 		part.CanTouch = false
 		part.CanQuery = false
@@ -68,11 +68,6 @@ local function createHitbox(plr)
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
 		part.Parent = folder
-
-		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = part
-		weld.Part1 = root
-		weld.Parent = part
 
 		table.insert(parts,{
 			part = part,
@@ -90,7 +85,7 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE + AUTO CREATE
+-- UPDATE LOOP
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
@@ -204,27 +199,9 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER CLEANUP
+-- CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
 	removeHitbox(plr)
-end)
-
---------------------------------------------------
--- RESPAWN SUPPORT
---------------------------------------------------
-
-Players.PlayerAdded:Connect(function(plr)
-
-	plr.CharacterAdded:Connect(function()
-
-		task.wait(1)
-
-		if Enabled then
-			createHitbox(plr)
-		end
-
-	end)
-
 end)
