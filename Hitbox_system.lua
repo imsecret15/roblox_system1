@@ -1,180 +1,240 @@
--- Hitbox_system.lua (fixed minimal version)
+-- Hitbox_system.lua
 
-task.spawn(function()
-
-local Players = game("Players")
-local RunService = game("RunService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local PhysicsService = game:GetService("PhysicsService")
 
 local player = Players.LocalPlayer
-
--- WAIT FOR SETTINGS (important so script doesn't crash loader)
-repeat task.wait() until shared and shared.HitboxSettings
+local Settings = shared.HitboxSettings
 
 local Hitboxes = {}
-local LastEnabled = false
+local Enabled = false
 
-local function getSettings()
-return shared.HitboxSettings
-end
+--------------------------------------------------
+-- COLLISION GROUP SETUP
+--------------------------------------------------
 
-local function removeHitbox(plr)
+pcall(function()
+	PhysicsService:CreateCollisionGroup("HitboxGhost")
+end)
 
-local data = Hitboxes[plr]
+PhysicsService:CollisionGroupSetCollidable("HitboxGhost","Default",false)
 
-if data then
-	if data.folder then
-		pcall(function()
-			data.folder:Destroy()
-		end)
-	end
-	Hitboxes[plr] = nil
-end
-
-end
-
-local function removeAll()
-
-local list = {}
-
-for plr,_ in pairs(Hitboxes) do
-	table.insert(list, plr)
-end
-
-for _,plr in ipairs(list) do
-	removeHitbox(plr)
-end
-
-end
+--------------------------------------------------
+-- CREATE HITBOX
+--------------------------------------------------
 
 local function createHitbox(plr)
 
-if plr == player then return end
+	if plr == player then return end
 
-local char = plr.Character
-if not char then return end
+	local char = plr.Character
+	if not char then return end
 
-local root = char:FindFirstChild("HumanoidRootPart")
-if not root then return end
+	local root =
+		char:FindFirstChild("HumanoidRootPart")
+		or char:FindFirstChild("UpperTorso")
+		or char:FindFirstChild("Torso")
+		or char:FindFirstChild("LowerTorso")
+		or char:FindFirstChild("Head")
 
-removeHitbox(plr)
+	if not root then return end
 
-local folder = Instance.new("Folder")
-folder.Name = "ExtraHitbox"
-folder.Parent = workspace
+	-- remove old
+	if Hitboxes[plr] then
+		if Hitboxes[plr].folder then
+			Hitboxes[plr].folder:Destroy()
+		end
+	end
 
-local parts = {}
-local Settings = getSettings()
+	local folder = Instance.new("Folder")
+	folder.Name = "ExtraHitbox"
+	folder.Parent = workspace
 
-local offsets = {
-	Vector3.new(0,0,0),
-	Vector3.new(1,0,0),
-	Vector3.new(-1,0,0),
-	Vector3.new(0,0,1),
-	Vector3.new(0,0,-1),
-	Vector3.new(0,1,0),
-	Vector3.new(0,-1,0)
-}
+	local parts = {}
 
-for _,offset in ipairs(offsets) do
+	local offsets = {
+		Vector3.new(0,0,0),
+		Vector3.new(1,0,0),
+		Vector3.new(-1,0,0),
+		Vector3.new(0,0,1),
+		Vector3.new(0,0,-1),
+		Vector3.new(0,1,0),
+		Vector3.new(0,-1,0)
+	}
 
-	local part = Instance.new("Part")
+	for _,offset in ipairs(offsets) do
 
-	part.Anchored = true
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = false
+		local part = Instance.new("Part")
 
-	part.Material = Enum.Material.Neon
-	part.Color = Color3.fromRGB(255,0,0)
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanTouch = false
+		part.CanQuery = false
 
-	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-	part.Transparency = Settings.Visible and 0.4 or 1
+		PhysicsService:SetPartCollisionGroup(part,"HitboxGhost")
 
-	part.Parent = folder
+		part.Material = Enum.Material.Neon
+		part.Color = Color3.fromRGB(255,0,0)
 
-	table.insert(parts,{
-		part = part,
-		offset = offset
-	})
+		part.Transparency = Settings.Visible and 0.4 or 1
+		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+		part.Parent = folder
+
+		table.insert(parts,{
+			part = part,
+			offset = offset
+		})
+
+	end
+
+	Hitboxes[plr] = {
+		root = root,
+		parts = parts,
+		folder = folder
+	}
 
 end
 
-Hitboxes[plr] = {
-	parts = parts,
-	folder = folder
-}
+--------------------------------------------------
+-- UPDATE + AUTO CREATE
+--------------------------------------------------
 
-end
+RunService.RenderStepped:Connect(function()
 
-RunService.RenderStepped(function()
+	if not Enabled then return end
 
-local Settings = getSettings()
+	for _,plr in pairs(Players:GetPlayers()) do
 
-if Settings.Enabled ~= LastEnabled then
+		if plr ~= player then
 
-	if not Settings.Enabled then
-		removeAll()
-	else
-		for _,plr in ipairs(Players:GetPlayers()) do
-			if plr ~= player then
+			local char = plr.Character
+			if not char then continue end
+
+			local root =
+				char:FindFirstChild("HumanoidRootPart")
+				or char:FindFirstChild("UpperTorso")
+				or char:FindFirstChild("Torso")
+				or char:FindFirstChild("LowerTorso")
+				or char:FindFirstChild("Head")
+
+			if not root then continue end
+
+			if not Hitboxes[plr] then
 				createHitbox(plr)
 			end
-		end
-	end
 
-	LastEnabled = Settings.Enabled
-end
+			local data = Hitboxes[plr]
+			if not data then continue end
 
-if not Settings.Enabled then return end
+			data.root = root
 
-for _,plr in ipairs(Players:GetPlayers()) do
+			for _,info in pairs(data.parts) do
 
-	if plr ~= player then
+				local part = info.part
+				local offset = info.offset
 
-		local char = plr.Character
-		if not char then return end
-
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if not root then return end
-
-		if not Hitboxes[plr] then
-			createHitbox(plr)
-		end
-
-		local data = Hitboxes[plr]
-		if not data then return end
-
-		for _,info in ipairs(data.parts) do
-
-			local part = info.part
-			local offset = info.offset
-
-			if part and part.Parent then
-				part.CFrame = root.CFrame * CFrame.new(offset)
+				part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
 				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 				part.Transparency = Settings.Visible and 0.4 or 1
+
 			end
 
 		end
 
 	end
-end
 
 end)
 
-Players.PlayerRemoving(removeHitbox)
+--------------------------------------------------
+-- REMOVE
+--------------------------------------------------
 
-Players.PlayerAdded(function(plr)
+local function removeHitbox(plr)
 
-plr.CharacterAdded:Connect(function()
+	local data = Hitboxes[plr]
 
-	if getSettings().Enabled then
-		task.wait(0.2)
+	if data then
+		if data.folder then
+			data.folder:Destroy()
+		end
+		Hitboxes[plr] = nil
+	end
+
+end
+
+--------------------------------------------------
+-- ENABLE
+--------------------------------------------------
+
+local function enableHitbox()
+
+	Enabled = true
+
+	for _,plr in pairs(Players:GetPlayers()) do
 		createHitbox(plr)
 	end
 
-end)
+end
+
+--------------------------------------------------
+-- DISABLE
+--------------------------------------------------
+
+local function disableHitbox()
+
+	Enabled = false
+
+	for plr,_ in pairs(Hitboxes) do
+		removeHitbox(plr)
+	end
+
+end
+
+--------------------------------------------------
+-- SETTINGS WATCHER
+--------------------------------------------------
+
+task.spawn(function()
+
+	while true do
+
+		task.wait(0.15)
+
+		if Settings.Enabled and not Enabled then
+			enableHitbox()
+
+		elseif not Settings.Enabled and Enabled then
+			disableHitbox()
+		end
+
+	end
 
 end)
+
+--------------------------------------------------
+-- PLAYER CLEANUP
+--------------------------------------------------
+
+Players.PlayerRemoving:Connect(function(plr)
+	removeHitbox(plr)
+end)
+
+--------------------------------------------------
+-- RESPAWN SUPPORT
+--------------------------------------------------
+
+Players.PlayerAdded:Connect(function(plr)
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(1)
+
+		if Enabled then
+			createHitbox(plr)
+		end
+
+	end)
 
 end)
