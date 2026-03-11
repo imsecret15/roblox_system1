@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
 local Settings
 repeat
@@ -28,18 +29,19 @@ local function createBox(plr)
 	local head = char:FindFirstChild("Head")
 	if not head then return end
 
-	if Boxes[plr] then return end
+	if Boxes[plr] then
+		if Boxes[plr].Adornee == head then return end
+		Boxes[plr]:Destroy()
+	end
 
 	local box = Instance.new("BoxHandleAdornment")
 	box.Name = "BowModeBox"
 	box.Adornee = head
 	box.AlwaysOnTop = true
 	box.ZIndex = 10
-
 	box.Size = Vector3.new(3,3,3)
-	box.Color3 = Color3.fromRGB(255, 50, 50)
+	box.Color3 = Color3.fromRGB(255,50,50)
 	box.Transparency = Settings.Visible and 0.4 or 1
-
 	box.Parent = head
 
 	Boxes[plr] = box
@@ -47,47 +49,37 @@ local function createBox(plr)
 end
 
 --------------------------------------------------
--- UPDATE
+-- CLEANUP
 --------------------------------------------------
 
-RunService.RenderStepped:Connect(function()
+local function removeBox(plr)
 
-	if not Enabled then return end
+	if Boxes[plr] then
+		Boxes[plr]:Destroy()
+		Boxes[plr] = nil
+	end
 
-	for _,plr in pairs(Players:GetPlayers()) do
+end
 
-		if plr ~= player then
+--------------------------------------------------
+-- TARGET SELECTION
+--------------------------------------------------
 
-			local char = plr.Character
-			if not char then continue end
+local function getTargetHead()
 
-			local head = char:FindFirstChild("Head")
-			if not head then continue end
+	-- priority: aimlock target
+	if shared.AimTarget and shared.AimTarget.Character then
 
-			if not Boxes[plr] then
-				createBox(plr)
-			end
-
-			local box = Boxes[plr]
-
-			if box then
-				box.Transparency = Settings.Visible and 0.4 or 1
-			end
-
+		local head = shared.AimTarget.Character:FindFirstChild("Head")
+		if head then
+			return head
 		end
 
 	end
 
-end)
-
---------------------------------------------------
--- BOW HIT SYSTEM
---------------------------------------------------
-
-local function getClosestHead()
-
+	-- fallback: closest to crosshair
 	local closest
-	local dist = math.huge
+	local shortest = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
@@ -99,10 +91,14 @@ local function getClosestHead()
 			local head = char:FindFirstChild("Head")
 			if not head then continue end
 
-			local magnitude = (head.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
+			local pos, visible = camera:WorldToViewportPoint(head.Position)
+			if not visible then continue end
 
-			if magnitude < dist then
-				dist = magnitude
+			local dist = (Vector2.new(pos.X,pos.Y) -
+				Vector2.new(camera.ViewportSize.X/2,camera.ViewportSize.Y/2)).Magnitude
+
+			if dist < shortest then
+				shortest = dist
 				closest = head
 			end
 
@@ -121,15 +117,17 @@ end
 workspace.ChildAdded:Connect(function(obj)
 
 	if not Enabled then return end
+	if not obj:IsA("BasePart") then return end
 
-	if obj.Name:lower():find("arrow") or obj.Name:lower():find("projectile") then
+	local name = obj.Name:lower()
 
-		local head = getClosestHead()
+	if name:find("arrow") or name:find("projectile") then
 
-		if head and obj:IsA("BasePart") then
+		local head = getTargetHead()
 
-			-- place arrow slightly in front of head
-			local direction = (head.Position - workspace.CurrentCamera.CFrame.Position).Unit
+		if head then
+
+			local direction = (head.Position - camera.CFrame.Position).Unit
 
 			obj.CFrame = CFrame.new(
 				head.Position - direction * 2,
@@ -141,6 +139,44 @@ workspace.ChildAdded:Connect(function(obj)
 	end
 
 end)
+
+--------------------------------------------------
+-- UPDATE BOXES
+--------------------------------------------------
+
+RunService.RenderStepped:Connect(function()
+
+	if not Enabled then return end
+
+	for _,plr in pairs(Players:GetPlayers()) do
+
+		if plr ~= player then
+			createBox(plr)
+		end
+
+	end
+
+end)
+
+--------------------------------------------------
+-- RESPAWN SUPPORT
+--------------------------------------------------
+
+Players.PlayerAdded:Connect(function(plr)
+
+	plr.CharacterAdded:Connect(function()
+
+		task.wait(0.5)
+
+		if Enabled then
+			createBox(plr)
+		end
+
+	end)
+
+end)
+
+Players.PlayerRemoving:Connect(removeBox)
 
 --------------------------------------------------
 -- ENABLE / DISABLE
