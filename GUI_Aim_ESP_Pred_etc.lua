@@ -301,6 +301,39 @@ local boxCorner = Instance.new("UICorner")
 boxCorner.Parent = predictionBox
 
 --------------------------------------------------
+-- HEAD OFFSET SETTING
+--------------------------------------------------
+
+local headOffsetFrame = Instance.new("Frame")
+headOffsetFrame.Size = UDim2.new(1,-10,0,35)
+headOffsetFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+headOffsetFrame.Parent = scrollFrame
+
+local headFrameCorner = Instance.new("UICorner")
+headFrameCorner.Parent = headOffsetFrame
+
+local headOffsetLabel = Instance.new("TextLabel")
+headOffsetLabel.Size = UDim2.new(0.6,0,1,0)
+headOffsetLabel.BackgroundTransparency = 1
+headOffsetLabel.Text = "Head Offset:"
+headOffsetLabel.TextColor3 = Color3.new(1,1,1)
+headOffsetLabel.TextScaled = true
+headOffsetLabel.Parent = headOffsetFrame
+
+local headOffsetBox = Instance.new("TextBox")
+headOffsetBox.Size = UDim2.new(0.4,-5,0.8,0)
+headOffsetBox.Position = UDim2.new(0.6,5,0.1,0)
+headOffsetBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+headOffsetBox.TextColor3 = Color3.new(1,1,1)
+headOffsetBox.Text = tostring(HeadOffset.Y)
+headOffsetBox.TextScaled = true
+headOffsetBox.ClearTextOnFocus = false
+headOffsetBox.Parent = headOffsetFrame
+
+local headBoxCorner = Instance.new("UICorner")
+headBoxCorner.Parent = headOffsetBox
+
+--------------------------------------------------
 -- AIM CIRCLE SIZE SETTING
 --------------------------------------------------
 
@@ -455,6 +488,27 @@ end)
 --------------------------------------------------
 
 predictionBox.FocusLost:Connect(function(enterPressed)
+
+	--------------------------------------------------
+-- HEAD OFFSET UPDATE
+--------------------------------------------------
+
+headOffsetBox.FocusLost:Connect(function(enterPressed)
+
+	if enterPressed then
+
+		local value = tonumber(headOffsetBox.Text)
+
+		if value then
+			HeadOffset = Vector3.new(0,value,0)
+			headOffsetBox.Text = tostring(value)
+		else
+			headOffsetBox.Text = tostring(HeadOffset.Y)
+		end
+
+	end
+
+end)
 
 	if enterPressed then
 
