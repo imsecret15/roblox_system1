@@ -655,6 +655,19 @@ circle.BorderSizePixel = 0
 circle.Parent = mainGui
 circle.Visible = CircleVisible
 
+--------------------------------------------------
+-- BOW MODE INDICATOR
+--------------------------------------------------
+
+local bowIndicator = Instance.new("Frame")
+bowIndicator.Size = UDim2.new(0,12,0,12)
+bowIndicator.Position = UDim2.new(0,10,0,10)
+bowIndicator.BackgroundColor3 = Color3.fromRGB(255,50,50)
+bowIndicator.BorderSizePixel = 0
+bowIndicator.Visible = false
+bowIndicator.ZIndex = 999
+bowIndicator.Parent = mainGui
+
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(1,0)
 corner.Parent = circle
@@ -745,8 +758,10 @@ bowButton.MouseButton1Click:Connect(function()
 
 	if shared.BowModeSettings.Enabled then
 		bowButton.Text = "Bow Mode : ON"
+		bowIndicator.Visible = true
 	else
 		bowButton.Text = "Bow Mode : OFF"
+		bowIndicator.Visible = false
 	end
 
 end)
