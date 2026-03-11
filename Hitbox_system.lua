@@ -31,23 +31,23 @@ local function createHitbox(plr)
 	if Hitboxes[plr] then return end
 
 	local part = Instance.new("Part")
-part.Name = "ExtraHitbox"
+	part.Name = "ExtraHitbox"
 
-part.Anchored = true
-part.CanCollide = false
-part.CanTouch = false
-part.CanQuery = false
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
 
-part.Material = Enum.Material.Neon
-part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.Color = Color3.fromRGB(255,0,0)
+	part.CastShadow = false
 
-part.Transparency = 0
-part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
+	part.Transparency = 0
+	part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
 
-part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-part.Parent = workspace
-
+	part.Parent = workspace
 	part.CFrame = root.CFrame
 
 	Hitboxes[plr] = {
@@ -75,7 +75,6 @@ RunService.RenderStepped:Connect(function()
 		local root = char:FindFirstChild("HumanoidRootPart")
 		if not root then continue end
 
-		-- create hitbox if missing
 		if not Hitboxes[plr] then
 			createHitbox(plr)
 		end
@@ -85,25 +84,22 @@ RunService.RenderStepped:Connect(function()
 
 		local part = data.part
 
-		-- fix missing part
 		if not part or not part.Parent then
 			Hitboxes[plr] = nil
 			createHitbox(plr)
 			continue
 		end
 
-		-- ALWAYS update root reference
 		data.root = root
 
-		-- follow player
 		part.CFrame = data.root.CFrame
-
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 		part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
 
 	end
 
 end)
+
 --------------------------------------------------
 -- REMOVE
 --------------------------------------------------
@@ -184,7 +180,9 @@ Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(1)
+		removeHitbox(plr)
+
+		task.wait(0.5)
 
 		if Enabled then
 			createHitbox(plr)
