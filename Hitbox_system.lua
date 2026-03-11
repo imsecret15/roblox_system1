@@ -1,9 +1,13 @@
--- Hitbox_system.lua
+-- Hitbox_system.lua (Improved)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
+
+--------------------------------------------------
+-- WAIT FOR SETTINGS
+--------------------------------------------------
 
 local Settings
 repeat
@@ -11,14 +15,42 @@ repeat
 	Settings = shared.HitboxSettings
 until Settings
 
+--------------------------------------------------
+-- VARIABLES
+--------------------------------------------------
+
 local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HITBOX
+-- CREATE VISUAL BOX
 --------------------------------------------------
 
-local function createHitbox(plr)
+local function createVisual(root)
+
+	local box = Instance.new("BoxHandleAdornment")
+	box.Name = "HitboxVisual"
+
+	box.Adornee = root
+	box.AlwaysOnTop = true
+	box.ZIndex = 5
+
+	box.Color3 = Color3.fromRGB(255,0,0)
+	box.Transparency = 0.5
+
+	box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+	box.Parent = root
+
+	return box
+
+end
+
+--------------------------------------------------
+-- APPLY HITBOX
+--------------------------------------------------
+
+local function applyHitbox(plr)
 
 	if plr == player then return end
 
@@ -30,35 +62,47 @@ local function createHitbox(plr)
 
 	if Hitboxes[plr] then return end
 
-	local part = Instance.new("Part")
-	part.Name = "ExtraHitbox"
+	local data = {}
 
-	part.Anchored = true
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = false
+	data.root = root
+	data.originalSize = root.Size
 
-	part.Material = Enum.Material.Neon
-	part.Color = Color3.fromRGB(255,0,0)
-	part.CastShadow = false
+	-- expand root
+	root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	root.CanCollide = false
 
-	part.Transparency = 0
-	part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
+	-- optional visual
+	if Settings.Visible then
+		data.visual = createVisual(root)
+	end
 
-	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-
-	part.Parent = workspace
-	part.CFrame = root.CFrame
-
-	Hitboxes[plr] = {
-		part = part,
-		root = root
-	}
+	Hitboxes[plr] = data
 
 end
 
 --------------------------------------------------
--- UPDATE
+-- REMOVE HITBOX
+--------------------------------------------------
+
+local function removeHitbox(plr)
+
+	local data = Hitboxes[plr]
+	if not data then return end
+
+	if data.root and data.root.Parent then
+		data.root.Size = data.originalSize
+	end
+
+	if data.visual then
+		data.visual:Destroy()
+	end
+
+	Hitboxes[plr] = nil
+
+end
+
+--------------------------------------------------
+-- UPDATE LOOP
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
@@ -76,57 +120,39 @@ RunService.RenderStepped:Connect(function()
 		if not root then continue end
 
 		if not Hitboxes[plr] then
-			createHitbox(plr)
-		end
-
-		local data = Hitboxes[plr]
-		if not data then continue end
-
-		local part = data.part
-
-		if not part or not part.Parent then
-			Hitboxes[plr] = nil
-			createHitbox(plr)
+			applyHitbox(plr)
 			continue
 		end
 
-		data.root = root
+		local data = Hitboxes[plr]
 
-		part.CFrame = data.root.CFrame
-		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-		part.LocalTransparencyModifier = Settings.Visible and 0.6 or 1
+		if not data.root or not data.root.Parent then
+			removeHitbox(plr)
+			applyHitbox(plr)
+			continue
+		end
+
+		-- live update size
+		data.root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+		if data.visual then
+			data.visual.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		end
 
 	end
 
 end)
 
 --------------------------------------------------
--- REMOVE
---------------------------------------------------
-
-local function removeHitbox(plr)
-
-	local data = Hitboxes[plr]
-	if not data then return end
-
-	if data.part then
-		data.part:Destroy()
-	end
-
-	Hitboxes[plr] = nil
-
-end
-
---------------------------------------------------
 -- ENABLE
 --------------------------------------------------
 
-local function enableHitbox()
+local function enable()
 
 	Enabled = true
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		createHitbox(plr)
+		applyHitbox(plr)
 	end
 
 end
@@ -135,7 +161,7 @@ end
 -- DISABLE
 --------------------------------------------------
 
-local function disableHitbox()
+local function disable()
 
 	Enabled = false
 
@@ -153,13 +179,13 @@ task.spawn(function()
 
 	while true do
 
-		task.wait(0.15)
+		task.wait(0.2)
 
 		if Settings.Enabled and not Enabled then
-			enableHitbox()
+			enable()
 
 		elseif not Settings.Enabled and Enabled then
-			disableHitbox()
+			disable()
 		end
 
 	end
@@ -167,7 +193,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER CLEANUP
+-- PLAYER REMOVAL
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(removeHitbox)
@@ -185,7 +211,7 @@ Players.PlayerAdded:Connect(function(plr)
 		task.wait(0.5)
 
 		if Enabled then
-			createHitbox(plr)
+			applyHitbox(plr)
 		end
 
 	end)
