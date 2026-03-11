@@ -1,4 +1,4 @@
--- Hitbox_system.lua (Improved)
+-- Hitbox_system.lua (Fully Fixed)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -9,11 +9,7 @@ local player = Players.LocalPlayer
 -- WAIT FOR SETTINGS
 --------------------------------------------------
 
-local Settings
-repeat
-	task.wait()
-	Settings = shared.HitboxSettings
-until Settings
+repeat task.wait() until shared.HitboxSettings
 
 --------------------------------------------------
 -- VARIABLES
@@ -38,7 +34,11 @@ local function createVisual(root)
 	box.Color3 = Color3.fromRGB(255,0,0)
 	box.Transparency = 0.5
 
-	box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	box.Size = Vector3.new(
+		shared.HitboxSettings.Size,
+		shared.HitboxSettings.Size,
+		shared.HitboxSettings.Size
+	)
 
 	box.Parent = root
 
@@ -67,12 +67,15 @@ local function applyHitbox(plr)
 	data.root = root
 	data.originalSize = root.Size
 
-	-- expand root
-	root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	root.Size = Vector3.new(
+		shared.HitboxSettings.Size,
+		shared.HitboxSettings.Size,
+		shared.HitboxSettings.Size
+	)
+
 	root.CanCollide = false
 
-	-- optional visual
-	if Settings.Visible then
+	if shared.HitboxSettings.Visible then
 		data.visual = createVisual(root)
 	end
 
@@ -105,7 +108,7 @@ end
 -- UPDATE LOOP
 --------------------------------------------------
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
@@ -132,24 +135,36 @@ RunService.RenderStepped:Connect(function()
 			continue
 		end
 
-		-- live update size
-data.root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		-- live size update
+		data.root.Size = Vector3.new(
+			shared.HitboxSettings.Size,
+			shared.HitboxSettings.Size,
+			shared.HitboxSettings.Size
+		)
 
--- handle visibility toggle
-if Settings.Visible then
-	if not data.visual then
-		data.visual = createVisual(data.root)
-	end
-else
-	if data.visual then
-		data.visual:Destroy()
-		data.visual = nil
-	end
-end
+		-- visibility toggle
+		if shared.HitboxSettings.Visible then
 
-if data.visual then
-	data.visual.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-end
+			if not data.visual then
+				data.visual = createVisual(data.root)
+			end
+
+		else
+
+			if data.visual then
+				data.visual:Destroy()
+				data.visual = nil
+			end
+
+		end
+
+		if data.visual then
+			data.visual.Size = Vector3.new(
+				shared.HitboxSettings.Size,
+				shared.HitboxSettings.Size,
+				shared.HitboxSettings.Size
+			)
+		end
 
 	end
 
@@ -193,10 +208,10 @@ task.spawn(function()
 
 		task.wait(0.2)
 
-		if Settings.Enabled and not Enabled then
+		if shared.HitboxSettings.Enabled and not Enabled then
 			enable()
 
-		elseif not Settings.Enabled and Enabled then
+		elseif not shared.HitboxSettings.Enabled and Enabled then
 			disable()
 		end
 
@@ -230,10 +245,8 @@ local function setupRespawn(plr)
 
 end
 
--- existing players
 for _,plr in pairs(Players:GetPlayers()) do
 	setupRespawn(plr)
 end
 
--- new players
 Players.PlayerAdded:Connect(setupRespawn)
