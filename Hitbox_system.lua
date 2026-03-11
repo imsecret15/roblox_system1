@@ -30,25 +30,30 @@ local function createHitbox(plr)
 
 	if Hitboxes[plr] then return end
 
-	local originalSize = root.Size
+	local part = Instance.new("Part")
+	part.Name = "ExtraHitbox"
+	part.Anchored = false
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = true
+	part.Massless = true
+	part.Transparency = Settings.Visible and 0.4 or 1
+	part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-	local visual = Instance.new("BoxHandleAdornment")
-	visual.Name = "HitboxVisual"
-	visual.Adornee = root
-	visual.AlwaysOnTop = true
-	visual.ZIndex = 10
-	visual.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-	visual.Transparency = Settings.Visible and 0.4 or 1
-	visual.Color3 = Color3.fromRGB(255,0,0)
-	visual.Parent = root
+	part.Parent = char
 
-	root.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-	root.Massless = true
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = root
+	weld.Part1 = part
+	weld.Parent = part
+
+	part.CFrame = root.CFrame
 
 	Hitboxes[plr] = {
-		root = root,
-		originalSize = originalSize,
-		visual = visual
+		part = part,
+		weld = weld
 	}
 
 end
@@ -78,16 +83,10 @@ RunService.RenderStepped:Connect(function()
 			local data = Hitboxes[plr]
 			if not data then continue end
 
-			data.root = root
+			local part = data.part
 
-			local newSize = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-
-			root.Size = newSize
-
-			if data.visual then
-				data.visual.Size = newSize
-				data.visual.Transparency = Settings.Visible and 0.4 or 1
-			end
+			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Transparency = Settings.Visible and 0.4 or 1
 
 		end
 
@@ -104,12 +103,8 @@ local function removeHitbox(plr)
 	local data = Hitboxes[plr]
 	if not data then return end
 
-	if data.visual then
-		data.visual:Destroy()
-	end
-
-	if data.root and data.root.Parent then
-		data.root.Size = data.originalSize
+	if data.part then
+		data.part:Destroy()
 	end
 
 	Hitboxes[plr] = nil
