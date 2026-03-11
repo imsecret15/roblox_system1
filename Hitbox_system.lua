@@ -15,7 +15,7 @@ local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HITBOX
+-- CREATE HITBOX (visual only)
 --------------------------------------------------
 
 local function createHitbox(plr)
@@ -30,21 +30,19 @@ local function createHitbox(plr)
 
 	if Hitboxes[plr] then return end
 
-	local part = Instance.new("Part")
-	part.Name = "ExtraHitbox"
-	part.Anchored = true
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = false -- FIX: prevents blocking bullets
-	part.Transparency = Settings.Visible and 0.4 or 1
-	part.Color = Color3.fromRGB(255,0,0)
-	part.Material = Enum.Material.Neon
-	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	local box = Instance.new("BoxHandleAdornment")
+	box.Name = "ExtraHitbox"
+	box.Adornee = root
+	box.AlwaysOnTop = true
+	box.ZIndex = 10
+	box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+	box.Transparency = Settings.Visible and 0.4 or 1
+	box.Color3 = Color3.fromRGB(255,0,0)
 
-	part.Parent = char
+	box.Parent = root
 
 	Hitboxes[plr] = {
-		part = part,
+		box = box,
 		root = root
 	}
 
@@ -75,11 +73,10 @@ RunService.Heartbeat:Connect(function()
 			local data = Hitboxes[plr]
 			if not data then continue end
 
-			local part = data.part
+			local box = data.box
 
-			part.CFrame = root.CFrame
-			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			part.Transparency = Settings.Visible and 0.4 or 1
+			box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			box.Transparency = Settings.Visible and 0.4 or 1
 
 		end
 
@@ -96,8 +93,8 @@ local function removeHitbox(plr)
 	local data = Hitboxes[plr]
 	if not data then return end
 
-	if data.part then
-		data.part:Destroy()
+	if data.box then
+		data.box:Destroy()
 	end
 
 	Hitboxes[plr] = nil
