@@ -1,28 +1,17 @@
 -- Bowmode_system.lua
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
 
 local Settings
-repeat
-	task.wait()
-	Settings = shared.BowModeSettings
-until Settings
+repeat task.wait() until shared.BowModeSettings
+Settings = shared.BowModeSettings
 
 local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CONFIG (tune if needed)
---------------------------------------------------
-
-local DROP_MULTIPLIER = 0.018
-
---------------------------------------------------
--- CREATE HEAD BOX
+-- HEAD BOX
 --------------------------------------------------
 
 local function createBox(plr)
@@ -41,10 +30,10 @@ local function createBox(plr)
 	local box = Instance.new("BoxHandleAdornment")
 	box.Name = "BowModeBox"
 	box.Adornee = head
-	box.AlwaysOnTop = true
-	box.ZIndex = 10
 	box.Size = Vector3.new(3,3,3)
 	box.Color3 = Color3.fromRGB(255,50,50)
+	box.AlwaysOnTop = true
+	box.ZIndex = 10
 	box.Transparency = Settings.Visible and 0.4 or 1
 	box.Parent = head
 
@@ -53,48 +42,35 @@ local function createBox(plr)
 end
 
 --------------------------------------------------
--- CLEANUP
---------------------------------------------------
-
-local function removeBox(plr)
-
-	if Boxes[plr] then
-		Boxes[plr]:Destroy()
-		Boxes[plr] = nil
-	end
-
-end
-
---------------------------------------------------
--- TARGET SELECTION
+-- TARGET HEAD
 --------------------------------------------------
 
 local function getTargetHead()
 
+	-- priority: aimlock
 	if shared.AimTarget and shared.AimTarget.Character then
 		local head = shared.AimTarget.Character:FindFirstChild("Head")
 		if head then return head end
 	end
 
+	-- fallback: closest player
 	local closest
-	local shortest = math.huge
+	local dist = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
 		if plr ~= player and plr.Character then
 
 			local head = plr.Character:FindFirstChild("Head")
-			if not head then continue end
+			if head then
 
-			local pos, visible = camera:WorldToViewportPoint(head.Position)
-			if not visible then continue end
+				local mag = (head.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
 
-			local dist = (Vector2.new(pos.X,pos.Y) -
-				Vector2.new(camera.ViewportSize.X/2,camera.ViewportSize.Y/2)).Magnitude
+				if mag < dist then
+					dist = mag
+					closest = head
+				end
 
-			if dist < shortest then
-				shortest = dist
-				closest = head
 			end
 
 		end
@@ -106,62 +82,51 @@ local function getTargetHead()
 end
 
 --------------------------------------------------
--- DROP COMPENSATION
+-- REMOTE HOOK (REAL FIX)
 --------------------------------------------------
 
-local function getPredictedPosition(head)
+local mt = getrawmetatable(game)
+setreadonly(mt,false)
 
-	local distance = (head.Position - camera.CFrame.Position).Magnitude
-	local drop = distance * DROP_MULTIPLIER
+local old = mt.__namecall
 
-	return head.Position + Vector3.new(0,drop,0)
+mt.__namecall = newcclosure(function(self,...)
 
-end
+	local args = {...}
+	local method = getnamecallmethod()
 
---------------------------------------------------
--- ARROW REDIRECT
---------------------------------------------------
+	if Enabled and method == "FireServer" then
 
-workspace.ChildAdded:Connect(function(obj)
+		if typeof(args[3]) == "string" and args[3] == "S" then
 
-	if not Enabled then return end
-	if not obj:IsA("BasePart") then return end
+			local head = getTargetHead()
 
-	local name = obj.Name:lower()
+			if head then
+				args[1] = head.Position
+			end
 
-	if name:find("arrow") or name:find("projectile") then
-
-		local head = getTargetHead()
-
-		if head then
-
-			local predicted = getPredictedPosition(head)
-
-			local dir = (predicted - camera.CFrame.Position).Unit
-
-			obj.CFrame = CFrame.new(
-				camera.CFrame.Position + dir * 5,
-				predicted
-			)
+			return old(self,unpack(args))
 
 		end
 
 	end
 
+	return old(self,...)
+
 end)
+
+setreadonly(mt,true)
 
 --------------------------------------------------
 -- UPDATE BOXES
 --------------------------------------------------
 
-RunService.RenderStepped:Connect(function()
+game:GetService("RunService").RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player then
-			createBox(plr)
-		end
+		createBox(plr)
 	end
 
 end)
@@ -170,28 +135,22 @@ end)
 -- RESPAWN SUPPORT
 --------------------------------------------------
 
-local function connectPlayer(plr)
+local function connect(plr)
 
 	plr.CharacterAdded:Connect(function()
-
-		task.wait(0.5)
-
+		task.wait(0.4)
 		if Enabled then
 			createBox(plr)
 		end
-
 	end)
 
 end
 
 for _,plr in pairs(Players:GetPlayers()) do
-	if plr ~= player then
-		connectPlayer(plr)
-	end
+	connect(plr)
 end
 
-Players.PlayerAdded:Connect(connectPlayer)
-Players.PlayerRemoving:Connect(removeBox)
+Players.PlayerAdded:Connect(connect)
 
 --------------------------------------------------
 -- ENABLE / DISABLE
@@ -211,8 +170,8 @@ local function disable()
 
 	Enabled = false
 
-	for _,box in pairs(Boxes) do
-		box:Destroy()
+	for _,v in pairs(Boxes) do
+		v:Destroy()
 	end
 
 	table.clear(Boxes)
