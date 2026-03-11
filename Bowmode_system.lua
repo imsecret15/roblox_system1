@@ -8,36 +8,10 @@ local Settings
 repeat task.wait() until shared.BowModeSettings
 Settings = shared.BowModeSettings
 
-local Boxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- FIND BOW
---------------------------------------------------
-
-local function getBow()
-
-	local char = player.Character
-	if not char then return end
-
-	for _,tool in pairs(player.Backpack:GetChildren()) do
-		if tool:FindFirstChild("mouse") then
-			return tool
-		end
-	end
-
-	if char then
-		for _,tool in pairs(char:GetChildren()) do
-			if tool:FindFirstChild("mouse") then
-				return tool
-			end
-		end
-	end
-
-end
-
---------------------------------------------------
--- TARGET SELECTION
+-- FIND TARGET
 --------------------------------------------------
 
 local function getTargetHead()
@@ -50,7 +24,6 @@ local function getTargetHead()
 	local shortest = math.huge
 
 	for _,plr in pairs(Players:GetPlayers()) do
-
 		if plr ~= player and plr.Character then
 
 			local head = plr.Character:FindFirstChild("Head")
@@ -66,60 +39,25 @@ local function getTargetHead()
 				shortest = dist
 				closest = head
 			end
-
 		end
-
 	end
 
 	return closest
-
 end
 
 --------------------------------------------------
--- BOX VISUAL
+-- REMOTE HOOK
 --------------------------------------------------
 
-local function createBox(plr)
+local old
+old = hookmetamethod(game,"__namecall",function(self,...)
 
-	if plr == player then return end
-	if not plr.Character then return end
+	local args = {...}
+	local method = getnamecallmethod()
 
-	local head = plr.Character:FindFirstChild("Head")
-	if not head then return end
+	if Enabled and method == "FireServer" then
 
-	if Boxes[plr] then return end
-
-	local box = Instance.new("BoxHandleAdornment")
-	box.Adornee = head
-	box.Size = Vector3.new(3,3,3)
-	box.Color3 = Color3.fromRGB(255,50,50)
-	box.AlwaysOnTop = true
-	box.Transparency = Settings.Visible and 0.4 or 1
-	box.Parent = head
-
-	Boxes[plr] = box
-
-end
-
---------------------------------------------------
--- BOW HOOK
---------------------------------------------------
-
-local function hookBow()
-
-	local bow = getBow()
-	if not bow then return end
-
-	local mouseEvent = bow:FindFirstChild("mouse")
-	if not mouseEvent then return end
-
-	local old
-	old = hookmetamethod(game,"__namecall",function(self,...)
-
-		local args = {...}
-		local method = getnamecallmethod()
-
-		if Enabled and self == mouseEvent and method == "FireServer" then
+		if self.Name == "mouse" or self.Name == "hit" then
 
 			local head = getTargetHead()
 
@@ -129,40 +67,10 @@ local function hookBow()
 
 			return old(self,unpack(args))
 		end
-
-		return old(self,...)
-
-	end)
-
-end
-
---------------------------------------------------
--- ENABLE / DISABLE
---------------------------------------------------
-
-local function enable()
-
-	Enabled = true
-
-	for _,plr in pairs(Players:GetPlayers()) do
-		createBox(plr)
 	end
 
-	hookBow()
-
-end
-
-local function disable()
-
-	Enabled = false
-
-	for _,box in pairs(Boxes) do
-		box:Destroy()
-	end
-
-	table.clear(Boxes)
-
-end
+	return old(self,...)
+end)
 
 --------------------------------------------------
 -- SETTINGS WATCHER
@@ -171,16 +79,9 @@ end
 task.spawn(function()
 
 	while true do
-
 		task.wait(0.15)
 
-		if Settings.Enabled and not Enabled then
-			enable()
-
-		elseif not Settings.Enabled and Enabled then
-			disable()
-		end
-
+		Enabled = Settings.Enabled
 	end
 
 end)
