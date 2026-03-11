@@ -1,3 +1,4 @@
+
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
@@ -15,7 +16,7 @@ local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HITBOX (visual only)
+-- CREATE HITBOX
 --------------------------------------------------
 
 local function createHitbox(plr)
@@ -30,20 +31,30 @@ local function createHitbox(plr)
 
 	if Hitboxes[plr] then return end
 
-	local box = Instance.new("BoxHandleAdornment")
-	box.Name = "ExtraHitbox"
-	box.Adornee = root
-	box.AlwaysOnTop = true
-	box.ZIndex = 10
-	box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-	box.Transparency = Settings.Visible and 0.4 or 1
-	box.Color3 = Color3.fromRGB(255,0,0)
+	local part = Instance.new("Part")
+	part.Name = "ExtraHitbox"
+	part.Anchored = false
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = true
+	part.Massless = true
+	part.Transparency = Settings.Visible and 0.4 or 1
+	part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-	box.Parent = root
+	part.Parent = char
+
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = root
+	weld.Part1 = part
+	weld.Parent = part
+
+	part.CFrame = root.CFrame
 
 	Hitboxes[plr] = {
-		box = box,
-		root = root
+		part = part,
+		weld = weld
 	}
 
 end
@@ -52,7 +63,7 @@ end
 -- UPDATE
 --------------------------------------------------
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
@@ -73,10 +84,10 @@ RunService.Heartbeat:Connect(function()
 			local data = Hitboxes[plr]
 			if not data then continue end
 
-			local box = data.box
+			local part = data.part
 
-			box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			box.Transparency = Settings.Visible and 0.4 or 1
+			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Transparency = Settings.Visible and 0.4 or 1
 
 		end
 
@@ -93,8 +104,8 @@ local function removeHitbox(plr)
 	local data = Hitboxes[plr]
 	if not data then return end
 
-	if data.box then
-		data.box:Destroy()
+	if data.part then
+		data.part:Destroy()
 	end
 
 	Hitboxes[plr] = nil
