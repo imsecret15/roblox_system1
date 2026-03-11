@@ -1,195 +1,179 @@
--- Hitbox_system.lua (safe version)
+-- Hitbox_system.lua (fixed minimal version)
 
 task.spawn(function()
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local Players = game("Players")
+local RunService = game("RunService")
 
 local player = Players.LocalPlayer
+
+-- WAIT FOR SETTINGS (important so script doesn't crash loader)
+repeat task.wait() until shared and shared.HitboxSettings
 
 local Hitboxes = {}
 local LastEnabled = false
 
 local function getSettings()
-	if shared and shared.HitboxSettings then
-		return shared.HitboxSettings
-	end
-
-	return {
-		Enabled = false,
-		Visible = true,
-		Size = 5
-	}
+return shared.HitboxSettings
 end
 
 local function removeHitbox(plr)
 
-	local data = Hitboxes[plr]
+local data = Hitboxes[plr]
 
-	if data then
-		if data.folder then
-			pcall(function()
-				data.folder:Destroy()
-			end)
-		end
-		Hitboxes[plr] = nil
+if data then
+	if data.folder then
+		pcall(function()
+			data.folder:Destroy()
+		end)
 	end
+	Hitboxes[plr] = nil
+end
 
 end
 
 local function removeAll()
 
-	local list = {}
+local list = {}
 
-	for plr,_ in pairs(Hitboxes) do
-		table.insert(list, plr)
-	end
+for plr,_ in pairs(Hitboxes) do
+	table.insert(list, plr)
+end
 
-	for _,plr in ipairs(list) do
-		removeHitbox(plr)
-	end
+for _,plr in ipairs(list) do
+	removeHitbox(plr)
+end
 
 end
 
 local function createHitbox(plr)
 
-	if plr == player then return end
+if plr == player then return end
 
-	local char = plr.Character
-	if not char then return end
+local char = plr.Character
+if not char then return end
 
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root then return end
+local root = char:FindFirstChild("HumanoidRootPart")
+if not root then return end
 
-	removeHitbox(plr)
+removeHitbox(plr)
 
-	local folder = Instance.new("Folder")
-	folder.Name = "ExtraHitbox"
-	folder.Parent = workspace
+local folder = Instance.new("Folder")
+folder.Name = "ExtraHitbox"
+folder.Parent = workspace
 
-	local parts = {}
-	local Settings = getSettings()
+local parts = {}
+local Settings = getSettings()
 
-	local offsets = {
-		Vector3.new(0,0,0),
-		Vector3.new(1,0,0),
-		Vector3.new(-1,0,0),
-		Vector3.new(0,0,1),
-		Vector3.new(0,0,-1),
-		Vector3.new(0,1,0),
-		Vector3.new(0,-1,0)
-	}
+local offsets = {
+	Vector3.new(0,0,0),
+	Vector3.new(1,0,0),
+	Vector3.new(-1,0,0),
+	Vector3.new(0,0,1),
+	Vector3.new(0,0,-1),
+	Vector3.new(0,1,0),
+	Vector3.new(0,-1,0)
+}
 
-	for _,offset in ipairs(offsets) do
+for _,offset in ipairs(offsets) do
 
-		local part = Instance.new("Part")
+	local part = Instance.new("Part")
 
-		part.Anchored = true
-		part.CanCollide = false
-		part.CanTouch = false
-		part.CanQuery = false
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
 
-		part.Material = Enum.Material.Neon
-		part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.Color = Color3.fromRGB(255,0,0)
 
-		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-		part.Transparency = Settings.Visible and 0.4 or 1
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	part.Transparency = Settings.Visible and 0.4 or 1
 
-		part.Parent = folder
+	part.Parent = folder
 
-		table.insert(parts,{
-			part = part,
-			offset = offset
-		})
-
-	end
-
-	Hitboxes[plr] = {
-		parts = parts,
-		folder = folder
-	}
+	table.insert(parts,{
+		part = part,
+		offset = offset
+	})
 
 end
 
-RunService.RenderStepped:Connect(function()
+Hitboxes[plr] = {
+	parts = parts,
+	folder = folder
+}
 
-	local Settings = getSettings()
+end
 
-	if Settings.Enabled ~= LastEnabled then
+RunService.RenderStepped(function()
 
-		if not Settings.Enabled then
-			removeAll()
-		else
-			for _,plr in ipairs(Players:GetPlayers()) do
-				if plr ~= player then
-					createHitbox(plr)
-				end
+local Settings = getSettings()
+
+if Settings.Enabled ~= LastEnabled then
+
+	if not Settings.Enabled then
+		removeAll()
+	else
+		for _,plr in ipairs(Players:GetPlayers()) do
+			if plr ~= player then
+				createHitbox(plr)
 			end
-		end
-
-		LastEnabled = Settings.Enabled
-	end
-
-	if not Settings.Enabled then return end
-
-	for _,plr in ipairs(Players:GetPlayers()) do
-
-		if plr ~= player then
-
-			local char = plr.Character
-
-			if char then
-
-				local root = char:FindFirstChild("HumanoidRootPart")
-
-				if root then
-
-					if not Hitboxes[plr] then
-						createHitbox(plr)
-					end
-
-					local data = Hitboxes[plr]
-
-					if data then
-
-						for _,info in ipairs(data.parts) do
-
-							local part = info.part
-							local offset = info.offset
-
-							if part and part.Parent then
-								part.CFrame = root.CFrame * CFrame.new(offset)
-								part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-								part.Transparency = Settings.Visible and 0.4 or 1
-							end
-
-						end
-
-					end
-
-				end
-
-			end
-
 		end
 	end
 
-end)
+	LastEnabled = Settings.Enabled
+end
 
-Players.PlayerRemoving:Connect(function(plr)
-	removeHitbox(plr)
-end)
+if not Settings.Enabled then return end
 
-Players.PlayerAdded:Connect(function(plr)
+for _,plr in ipairs(Players:GetPlayers()) do
 
-	plr.CharacterAdded:Connect(function()
+	if plr ~= player then
 
-		if getSettings().Enabled then
-			task.wait(0.2)
+		local char = plr.Character
+		if not char then return end
+
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if not root then return end
+
+		if not Hitboxes[plr] then
 			createHitbox(plr)
 		end
 
-	end)
+		local data = Hitboxes[plr]
+		if not data then return end
+
+		for _,info in ipairs(data.parts) do
+
+			local part = info.part
+			local offset = info.offset
+
+			if part and part.Parent then
+				part.CFrame = root.CFrame * CFrame.new(offset)
+				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+				part.Transparency = Settings.Visible and 0.4 or 1
+			end
+
+		end
+
+	end
+end
+
+end)
+
+Players.PlayerRemoving(removeHitbox)
+
+Players.PlayerAdded(function(plr)
+
+plr.CharacterAdded:Connect(function()
+
+	if getSettings().Enabled then
+		task.wait(0.2)
+		createHitbox(plr)
+	end
+
+end)
 
 end)
 
