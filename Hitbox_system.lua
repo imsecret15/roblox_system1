@@ -1,4 +1,3 @@
-
 -- Hitbox_system.lua
 
 local Players = game:GetService("Players")
@@ -33,28 +32,25 @@ local function createHitbox(plr)
 
 	local part = Instance.new("Part")
 	part.Name = "ExtraHitbox"
-	part.Anchored = false
+
+	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
 	part.CanQuery = true
-	part.Massless = true
-	part.Transparency = Settings.Visible and 0.4 or 1
-	part.Color = Color3.fromRGB(255,0,0)
+
 	part.Material = Enum.Material.Neon
+	part.Color = Color3.fromRGB(255,0,0)
+
+	part.Transparency = Settings.Visible and 0.4 or 1
 	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-	part.Parent = char
-
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = root
-	weld.Part1 = part
-	weld.Parent = part
+	part.Parent = workspace
 
 	part.CFrame = root.CFrame
 
 	Hitboxes[plr] = {
 		part = part,
-		weld = weld
+		root = root
 	}
 
 end
@@ -63,33 +59,37 @@ end
 -- UPDATE
 --------------------------------------------------
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
-		if plr ~= player then
+		if plr == player then continue end
 
-			local char = plr.Character
-			if not char then continue end
+		local char = plr.Character
+		if not char then continue end
 
-			local root = char:FindFirstChild("HumanoidRootPart")
-			if not root then continue end
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if not root then continue end
 
-			if not Hitboxes[plr] then
-				createHitbox(plr)
-			end
-
-			local data = Hitboxes[plr]
-			if not data then continue end
-
-			local part = data.part
-
-			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			part.Transparency = Settings.Visible and 0.4 or 1
-
+		if not Hitboxes[plr] then
+			createHitbox(plr)
 		end
+
+		local data = Hitboxes[plr]
+		if not data then continue end
+
+		local part = data.part
+
+		if not part or not part.Parent then
+			Hitboxes[plr] = nil
+			continue
+		end
+
+		part.CFrame = root.CFrame
+		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		part.Transparency = Settings.Visible and 0.4 or 1
 
 	end
 
@@ -165,9 +165,7 @@ end)
 -- PLAYER CLEANUP
 --------------------------------------------------
 
-Players.PlayerRemoving:Connect(function(plr)
-	removeHitbox(plr)
-end)
+Players.PlayerRemoving:Connect(removeHitbox)
 
 --------------------------------------------------
 -- RESPAWN SUPPORT
