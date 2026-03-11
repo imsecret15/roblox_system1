@@ -13,6 +13,20 @@ local Modified = {}
 -- APPLY HITBOX
 --------------------------------------------------
 
+local function setPartHitbox(part, size)
+	if not part then return end
+
+	if not Modified[part] then
+		Modified[part] = part.Size
+	end
+
+	part.Size = Vector3.new(size, size, size)
+	part.CanCollide = false
+	part.CanTouch = false
+	part.Transparency = Settings.Visible and 0.5 or 1
+end
+
+
 local function applyHitbox(plr)
 
 	if plr == player then return end
@@ -20,32 +34,11 @@ local function applyHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local root = char:FindFirstChild("HumanoidRootPart")
-	local head = char:FindFirstChild("Head")
-
-	if root then
-
-		if not Modified[root] then
-			Modified[root] = root.Size
-		end
-
-		root.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-		root.CanCollide = false
-		root.Transparency = Settings.Visible and 0.5 or 1
-
-	end
-
-	if head then
-
-		if not Modified[head] then
-			Modified[head] = head.Size
-		end
-
-		head.Size = Vector3.new(Settings.Size/2, Settings.Size/2, Settings.Size/2)
-		head.CanCollide = false
-		head.Transparency = Settings.Visible and 0.5 or 1
-
-	end
+	setPartHitbox(char:FindFirstChild("HumanoidRootPart"), Settings.Size)
+	setPartHitbox(char:FindFirstChild("Head"), Settings.Size/2)
+	setPartHitbox(char:FindFirstChild("Torso"), Settings.Size)
+	setPartHitbox(char:FindFirstChild("UpperTorso"), Settings.Size)
+	setPartHitbox(char:FindFirstChild("LowerTorso"), Settings.Size)
 
 end
 
@@ -58,17 +51,11 @@ local function restoreHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local root = char:FindFirstChild("HumanoidRootPart")
-	local head = char:FindFirstChild("Head")
-
-	if root and Modified[root] then
-		root.Size = Modified[root]
-		root.Transparency = 0
-	end
-
-	if head and Modified[head] then
-		head.Size = Modified[head]
-		head.Transparency = 0
+	for part,originalSize in pairs(Modified) do
+		if part and part.Parent == char then
+			part.Size = originalSize
+			part.Transparency = 0
+		end
 	end
 
 end
