@@ -920,7 +920,12 @@ local velocity = root.AssemblyLinearVelocity
 		pred = Prediction * 0.7
 	end
 
-	local predictedPosition = targetPart.Position + (velocity * pred) + (AimPart == "Head" and HeadOffset or Vector3.new())
+	local dropOffset = Vector3.new(0, distance * 0.01, 0)
+
+	local predictedPosition =
+		targetPart.Position +
+		(velocity * pred) +
+		(AimPart == "Head" and dropOffset or Vector3.new())
 
 	camera.CFrame = CFrame.new(
 		camera.CFrame.Position,
