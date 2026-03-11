@@ -16,13 +16,19 @@ local Enabled = false
 local function createHitbox(plr)
 
 	if plr == player then return end
-	if Hitboxes[plr] then return end
 
 	local char = plr.Character
 	if not char then return end
 
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if not root then return end
+
+	-- remove old if exists
+	if Hitboxes[plr] then
+		if Hitboxes[plr].folder then
+			Hitboxes[plr].folder:Destroy()
+		end
+	end
 
 	local folder = Instance.new("Folder")
 	folder.Name = "ExtraHitbox"
@@ -31,17 +37,13 @@ local function createHitbox(plr)
 	local parts = {}
 
 	local offsets = {
-
 		Vector3.new(0,0,0),
 		Vector3.new(1,0,0),
 		Vector3.new(-1,0,0),
-
 		Vector3.new(0,0,1),
 		Vector3.new(0,0,-1),
-
 		Vector3.new(0,1,0),
 		Vector3.new(0,-1,0)
-
 	}
 
 	for _,offset in ipairs(offsets) do
@@ -88,7 +90,12 @@ RunService.RenderStepped:Connect(function()
 	for plr,data in pairs(Hitboxes) do
 
 		local root = data.root
-		if not root or not root.Parent then continue end
+
+		-- player respawned
+		if not root or not root.Parent then
+			createHitbox(plr)
+			continue
+		end
 
 		for _,info in pairs(data.parts) do
 
@@ -115,7 +122,9 @@ local function removeHitbox(plr)
 	local data = Hitboxes[plr]
 
 	if data then
-		data.folder:Destroy()
+		if data.folder then
+			data.folder:Destroy()
+		end
 		Hitboxes[plr] = nil
 	end
 
@@ -127,11 +136,11 @@ end
 
 local function enableHitbox()
 
+	Enabled = true
+
 	for _,plr in pairs(Players:GetPlayers()) do
 		createHitbox(plr)
 	end
-
-	Enabled = true
 
 end
 
@@ -141,11 +150,11 @@ end
 
 local function disableHitbox()
 
+	Enabled = false
+
 	for plr,_ in pairs(Hitboxes) do
 		removeHitbox(plr)
 	end
-
-	Enabled = false
 
 end
 
@@ -178,7 +187,7 @@ Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.5)
+		task.wait(0.3)
 
 		if Settings.Enabled then
 			createHitbox(plr)
