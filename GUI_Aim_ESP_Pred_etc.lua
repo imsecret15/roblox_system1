@@ -643,6 +643,22 @@ hitboxSizeBox.FocusLost:Connect(function()
 end)
 
 --------------------------------------------------
+-- HITBOX ENABLE TOGGLE
+--------------------------------------------------
+
+hitboxButton.MouseButton1Click:Connect(function()
+
+	shared.HitboxSettings.Enabled = not shared.HitboxSettings.Enabled
+
+	if shared.HitboxSettings.Enabled then
+		hitboxButton.Text = "Hitbox : ON"
+	else
+		hitboxButton.Text = "Hitbox : OFF"
+	end
+
+end)
+
+--------------------------------------------------
 -- BOW MODE TOGGLE
 --------------------------------------------------
 
