@@ -10,30 +10,6 @@ local Hitboxes = {}
 local Enabled = false
 
 --------------------------------------------------
--- CREATE HITBOX PART
---------------------------------------------------
-
-local function createPart(parent, size)
-
-	local p = Instance.new("Part")
-	p.Size = size
-	p.Anchored = false
-	p.CanCollide = false
-	p.CanTouch = false
-	p.CanQuery = false
-	p.Massless = true
-
-	p.Color = Color3.fromRGB(255,0,0)
-	p.Material = Enum.Material.Neon
-	p.Transparency = Settings.Visible and 0.4 or 1
-
-	p.Parent = parent
-
-	return p
-
-end
-
---------------------------------------------------
 -- CREATE HITBOX
 --------------------------------------------------
 
@@ -50,52 +26,76 @@ local function createHitbox(plr)
 
 	local folder = Instance.new("Folder")
 	folder.Name = "ExtraHitbox"
-	folder.Parent = char
+	folder.Parent = workspace.CurrentCamera
 
-	local size = Settings.Size
+	local parts = {}
 
 	local offsets = {
 
 		Vector3.new(0,0,0),
-		Vector3.new(size,0,0),
-		Vector3.new(-size,0,0),
+		Vector3.new(1,0,0),
+		Vector3.new(-1,0,0),
 
-		Vector3.new(0,0,size),
-		Vector3.new(0,0,-size),
+		Vector3.new(0,0,1),
+		Vector3.new(0,0,-1),
 
-		Vector3.new(0,size,0),
-		Vector3.new(0,-size,0)
+		Vector3.new(0,1,0),
+		Vector3.new(0,-1,0)
 
 	}
 
 	for _,offset in ipairs(offsets) do
 
-		local part = createPart(folder, Vector3.new(size,size,size))
+		local part = Instance.new("Part")
 
-		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = root
-		weld.Part1 = part
-		weld.Parent = part
+		part.Name = "Hitbox"
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanTouch = false
+		part.CanQuery = false
 
-		part.CFrame = root.CFrame * CFrame.new(offset)
+		part.Material = Enum.Material.Neon
+		part.Color = Color3.fromRGB(255,0,0)
+
+		part.Transparency = Settings.Visible and 0.4 or 1
+		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+		part.Parent = folder
+
+		table.insert(parts,{
+			part = part,
+			offset = offset
+		})
 
 	end
 
-	Hitboxes[plr] = folder
+	Hitboxes[plr] = {
+		root = root,
+		parts = parts,
+		folder = folder
+	}
 
 end
 
 --------------------------------------------------
--- UPDATE VISUALS
+-- UPDATE
 --------------------------------------------------
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
 
 	if not Enabled then return end
 
-	for plr,folder in pairs(Hitboxes) do
+	for plr,data in pairs(Hitboxes) do
 
-		for _,part in pairs(folder:GetChildren()) do
+		local root = data.root
+		if not root or not root.Parent then continue end
+
+		for _,info in pairs(data.parts) do
+
+			local part = info.part
+			local offset = info.offset
+
+			part.CFrame = root.CFrame * CFrame.new(offset * Settings.Size)
 
 			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Transparency = Settings.Visible and 0.4 or 1
@@ -112,10 +112,10 @@ end)
 
 local function removeHitbox(plr)
 
-	local folder = Hitboxes[plr]
+	local data = Hitboxes[plr]
 
-	if folder then
-		folder:Destroy()
+	if data then
+		data.folder:Destroy()
 		Hitboxes[plr] = nil
 	end
 
