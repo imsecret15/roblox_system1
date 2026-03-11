@@ -26,52 +26,42 @@ local function createHitbox(plr)
 	if not char then return end
 
 	local root = char:FindFirstChild("HumanoidRootPart")
-	local head = char:FindFirstChild("Head")
-
 	if not root then return end
-	if Hitboxes[plr] then return end
 
-	local folder = Instance.new("Folder")
-	folder.Name = "HitboxFolder"
-	folder.Parent = char
-
-	local function makePart(size, parentPart)
-
-		local part = Instance.new("Part")
-		part.Name = "ExtraHitbox"
-		part.Anchored = false
-		part.CanCollide = false
-		part.CanTouch = false
-		part.CanQuery = true
-		part.Massless = true
-		part.Transparency = Settings.Visible and 0.4 or 1
-		part.Material = Enum.Material.Neon
-		part.Color = Color3.fromRGB(255,0,0)
-		part.Size = Vector3.new(size,size,size)
-		part.Parent = folder
-
-		local weld = Instance.new("Weld")
-		weld.Part0 = parentPart
-		weld.Part1 = part
-		weld.C0 = CFrame.new()
-		weld.Parent = part
-
-		part.CFrame = parentPart.CFrame
-
-		return part
+	if Hitboxes[plr] then
+		return
 	end
 
-	local rootBox = makePart(Settings.Size, root)
-	local headBox
+	local part = Instance.new("Part")
+	part.Name = "ExtraHitbox"
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+	part.Transparency = Settings.Visible and 0.4 or 1
+	part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = true
+	part.Massless = true
+	part.Anchored = false
+	part.Parent = workspace
 
-	if head then
-		headBox = makePart(Settings.Size * 0.7, head)
-	end
+	part.CFrame = root.CFrame
+
+	local att0 = Instance.new("Attachment", part)
+	local att1 = Instance.new("Attachment", root)
+
+	local align = Instance.new("AlignPosition")
+	align.Attachment0 = att0
+	align.Attachment1 = att1
+	align.RigidityEnabled = true
+	align.Responsiveness = 200
+	align.MaxForce = math.huge
+	align.Parent = part
 
 	Hitboxes[plr] = {
-		root = rootBox,
-		head = headBox,
-		folder = folder
+		part = part,
+		align = align,
+		attachment = att1
 	}
 
 end
@@ -86,30 +76,26 @@ RunService.Heartbeat:Connect(function()
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
-		if plr == player then continue end
+		if plr ~= player then
 
-		local char = plr.Character
-		if not char then continue end
+			local char = plr.Character
+			if not char then continue end
 
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if not root then continue end
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if not root then continue end
 
-		if not Hitboxes[plr] then
-			createHitbox(plr)
-		end
+			if not Hitboxes[plr] then
+				createHitbox(plr)
+			end
 
-		local data = Hitboxes[plr]
-		if not data then continue end
+			local data = Hitboxes[plr]
+			if not data then continue end
 
-		if data.root then
-			data.root.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			data.root.Transparency = Settings.Visible and 0.4 or 1
-		end
+			local part = data.part
 
-		if data.head then
-			local size = Settings.Size * 0.7
-			data.head.Size = Vector3.new(size,size,size)
-			data.head.Transparency = Settings.Visible and 0.4 or 1
+			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+			part.Transparency = Settings.Visible and 0.4 or 1
+
 		end
 
 	end
@@ -125,8 +111,12 @@ local function removeHitbox(plr)
 	local data = Hitboxes[plr]
 	if not data then return end
 
-	if data.folder then
-		data.folder:Destroy()
+	if data.part then
+		data.part:Destroy()
+	end
+
+	if data.attachment then
+		data.attachment:Destroy()
 	end
 
 	Hitboxes[plr] = nil
@@ -169,7 +159,7 @@ task.spawn(function()
 
 	while true do
 
-		task.wait(0.2)
+		task.wait(0.15)
 
 		if Settings.Enabled and not Enabled then
 			enableHitbox()
@@ -183,25 +173,35 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER CLEANUP
+-- CHARACTER RESPAWN FIX
 --------------------------------------------------
 
-Players.PlayerRemoving:Connect(removeHitbox)
+local function characterAdded(plr)
 
---------------------------------------------------
--- RESPAWN SUPPORT
---------------------------------------------------
+	if plr == player then return end
+
+	task.wait(0.8)
+
+	if Enabled then
+		createHitbox(plr)
+	end
+
+end
+
+for _,plr in pairs(Players:GetPlayers()) do
+	plr.CharacterAdded:Connect(function()
+		characterAdded(plr)
+	end)
+end
 
 Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
-
-		task.wait(1)
-
-		if Enabled then
-			createHitbox(plr)
-		end
-
+		characterAdded(plr)
 	end)
 
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	removeHitbox(plr)
 end)
