@@ -33,7 +33,7 @@ local function createHitbox(plr)
 	local part = Instance.new("Part")
 	part.Name = "ExtraHitbox"
 	part.Anchored = true
-	part.CanCollide = false
+	part.CanCollide = true
 	part.CanTouch = false
 	part.CanQuery = false -- FIX: prevents blocking bullets
 	part.Transparency = Settings.Visible and 0.4 or 1
