@@ -1,4 +1,4 @@
--- Hitbox_system.lua (stable version)
+-- Hitbox_system.lua (fully stable)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -32,23 +32,39 @@ end
 ## -- REMOVE HITBOX
 
 local function removeHitbox(plr)
+
+```
 local data = Hitboxes[plr]
+
 if data then
-if data.folder then
-data.folder:Destroy()
+	if data.folder then
+		data.folder:Destroy()
+		data.folder = nil
+	end
+	Hitboxes[plr] = nil
 end
-Hitboxes[plr] = nil
-end
+```
+
 end
 
 ---
 
-## -- REMOVE ALL
+## -- REMOVE ALL (SAFE)
 
 local function removeAll()
+
+```
+local list = {}
+
 for plr,_ in pairs(Hitboxes) do
-removeHitbox(plr)
+	table.insert(list, plr)
 end
+
+for _,plr in ipairs(list) do
+	removeHitbox(plr)
+end
+```
+
 end
 
 ---
@@ -86,6 +102,7 @@ local offsets = {
 }
 
 for _,offset in ipairs(offsets) do
+
 	local part = Instance.new("Part")
 
 	part.Anchored = true
@@ -105,6 +122,7 @@ for _,offset in ipairs(offsets) do
 		part = part,
 		offset = offset
 	})
+
 end
 
 Hitboxes[plr] = {
@@ -124,7 +142,10 @@ RunService.RenderStepped:Connect(function()
 ```
 local Settings = getSettings()
 
--- Handle toggle changes
+--------------------------------------------------
+-- ENABLE / DISABLE HANDLING
+--------------------------------------------------
+
 if Settings.Enabled ~= LastEnabled then
 
 	if not Settings.Enabled then
@@ -138,9 +159,14 @@ if Settings.Enabled ~= LastEnabled then
 	end
 
 	LastEnabled = Settings.Enabled
+
 end
 
 if not Settings.Enabled then return end
+
+--------------------------------------------------
+-- UPDATE HITBOX POSITIONS
+--------------------------------------------------
 
 for _,plr in ipairs(Players:GetPlayers()) do
 
@@ -160,14 +186,20 @@ for _,plr in ipairs(Players:GetPlayers()) do
 		if not data then continue end
 
 		for _,info in ipairs(data.parts) do
+
 			local part = info.part
 			local offset = info.offset
 
-			part.CFrame = root.CFrame * CFrame.new(offset)
-			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-			part.Transparency = Settings.Visible and 0.4 or 1
+			if part and part.Parent then
+				part.CFrame = root.CFrame * CFrame.new(offset)
+				part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+				part.Transparency = Settings.Visible and 0.4 or 1
+			end
+
 		end
+
 	end
+
 end
 ```
 
@@ -177,13 +209,21 @@ end)
 
 ## -- PLAYER EVENTS
 
-Players.PlayerRemoving:Connect(removeHitbox)
+Players.PlayerRemoving:Connect(function(plr)
+removeHitbox(plr)
+end)
 
 Players.PlayerAdded:Connect(function(plr)
+
+```
 plr.CharacterAdded:Connect(function()
-if getSettings().Enabled then
-task.wait(0.2)
-createHitbox(plr)
-end
+
+	if getSettings().Enabled then
+		task.wait(0.2)
+		createHitbox(plr)
+	end
+
 end)
+```
+
 end)
