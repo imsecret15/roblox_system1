@@ -35,7 +35,7 @@ local function createHitbox(plr)
 	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
-	part.CanQuery = true
+	part.CanQuery = false -- FIX: prevents blocking bullets
 	part.Transparency = Settings.Visible and 0.4 or 1
 	part.Color = Color3.fromRGB(255,0,0)
 	part.Material = Enum.Material.Neon
