@@ -62,7 +62,7 @@ RunService.Heartbeat:Connect(function()
 		if not head then continue end
 
 		-- follow player
-		hitbox.CFrame = head.CFrame
+		hitbox.CFrame = head.CFrame * CFrame.new(0,0,-0.25)
 
 		-- update size if changed
 		local newSize = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
