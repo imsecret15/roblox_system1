@@ -6,73 +6,89 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local Settings = shared.HitboxSettings
 
+local Hitboxes = {}
 local Enabled = false
-local Modified = {}
 
 --------------------------------------------------
--- APPLY HITBOX
+-- CREATE HITBOX
 --------------------------------------------------
 
-local function setPartHitbox(part, size)
-	if not part then return end
-
-	if not Modified[part] then
-		Modified[part] = part.Size
-	end
-
-	part.Size = Vector3.new(size, size, size)
-	part.CanCollide = false
-	part.CanTouch = false
-	part.Transparency = Settings.Visible and 0.5 or 1
-end
-
-
-local function applyHitbox(plr)
+local function createHitbox(plr)
 
 	if plr == player then return end
+	if Hitboxes[plr] then return end
 
 	local char = plr.Character
 	if not char then return end
 
-	setPartHitbox(char:FindFirstChild("HumanoidRootPart"), Settings.Size)
-	setPartHitbox(char:FindFirstChild("Head"), Settings.Size/2)
-	setPartHitbox(char:FindFirstChild("Torso"), Settings.Size)
-	setPartHitbox(char:FindFirstChild("UpperTorso"), Settings.Size)
-	setPartHitbox(char:FindFirstChild("LowerTorso"), Settings.Size)
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	local box = Instance.new("Part")
+	box.Name = "ExtraHitbox"
+	box.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+	box.Anchored = false
+	box.CanCollide = false
+	box.CanTouch = false
+	box.CanQuery = false
+
+	box.Massless = true
+	box.Material = Enum.Material.Neon
+	box.Color = Color3.fromRGB(255,0,0)
+	box.Transparency = Settings.Visible and 0.4 or 1
+
+	box.Parent = char
+
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = root
+	weld.Part1 = box
+	weld.Parent = box
+
+	box.CFrame = root.CFrame
+
+	Hitboxes[plr] = box
 
 end
 
 --------------------------------------------------
--- RESTORE HITBOX
---------------------------------------------------
-
-local function restoreHitbox(plr)
-
-	local char = plr.Character
-	if not char then return end
-
-	for part,originalSize in pairs(Modified) do
-		if part and part.Parent == char then
-			part.Size = originalSize
-			part.Transparency = 0
-		end
-	end
-
-end
-
---------------------------------------------------
--- UPDATE LOOP
+-- UPDATE
 --------------------------------------------------
 
 RunService.Heartbeat:Connect(function()
 
 	if not Enabled then return end
 
-	for _,plr in pairs(Players:GetPlayers()) do
-		applyHitbox(plr)
+	for plr,box in pairs(Hitboxes) do
+
+		if not box then continue end
+
+		local newSize = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+
+		if box.Size ~= newSize then
+			box.Size = newSize
+		end
+
+		box.Transparency = Settings.Visible and 0.4 or 1
+
 	end
 
 end)
+
+--------------------------------------------------
+-- REMOVE
+--------------------------------------------------
+
+local function removeHitbox(plr)
+
+	local box = Hitboxes[plr]
+
+	if box then
+		box:Destroy()
+		Hitboxes[plr] = nil
+	end
+
+end
 
 --------------------------------------------------
 -- ENABLE
@@ -80,11 +96,11 @@ end)
 
 local function enableHitbox()
 
-	Enabled = true
-
 	for _,plr in pairs(Players:GetPlayers()) do
-		applyHitbox(plr)
+		createHitbox(plr)
 	end
+
+	Enabled = true
 
 end
 
@@ -94,11 +110,11 @@ end
 
 local function disableHitbox()
 
-	Enabled = false
-
-	for _,plr in pairs(Players:GetPlayers()) do
-		restoreHitbox(plr)
+	for plr,_ in pairs(Hitboxes) do
+		removeHitbox(plr)
 	end
+
+	Enabled = false
 
 end
 
@@ -124,7 +140,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- PLAYER JOIN SUPPORT
+-- PLAYER JOIN
 --------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
@@ -134,9 +150,17 @@ Players.PlayerAdded:Connect(function(plr)
 		task.wait(0.5)
 
 		if Settings.Enabled then
-			applyHitbox(plr)
+			createHitbox(plr)
 		end
 
 	end)
 
+end)
+
+--------------------------------------------------
+-- CLEANUP
+--------------------------------------------------
+
+Players.PlayerRemoving:Connect(function(plr)
+	removeHitbox(plr)
 end)
