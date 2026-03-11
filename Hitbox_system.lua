@@ -23,7 +23,7 @@ local function createHitbox(plr)
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if not root then return end
 
-	-- remove old if exists
+	-- remove old
 	if Hitboxes[plr] then
 		if Hitboxes[plr].folder then
 			Hitboxes[plr].folder:Destroy()
@@ -50,7 +50,6 @@ local function createHitbox(plr)
 
 		local part = Instance.new("Part")
 
-		part.Name = "Hitbox"
 		part.Anchored = true
 		part.CanCollide = false
 		part.CanTouch = false
@@ -80,7 +79,7 @@ local function createHitbox(plr)
 end
 
 --------------------------------------------------
--- UPDATE
+-- UPDATE HITBOXES
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
@@ -91,7 +90,6 @@ RunService.RenderStepped:Connect(function()
 
 		local root = data.root
 
-		-- player respawned
 		if not root or not root.Parent then
 			createHitbox(plr)
 			continue
@@ -106,6 +104,34 @@ RunService.RenderStepped:Connect(function()
 
 			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Transparency = Settings.Visible and 0.4 or 1
+
+		end
+
+	end
+
+end)
+
+--------------------------------------------------
+-- AUTO SCANNER (FIXES MISSING HITBOXES)
+--------------------------------------------------
+
+task.spawn(function()
+
+	while true do
+
+		task.wait(1)
+
+		if not Enabled then continue end
+
+		for _,plr in pairs(Players:GetPlayers()) do
+
+			if plr ~= player then
+
+				if not Hitboxes[plr] then
+					createHitbox(plr)
+				end
+
+			end
 
 		end
 
@@ -187,7 +213,7 @@ Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
 
-		task.wait(0.3)
+		task.wait(0.5)
 
 		if Settings.Enabled then
 			createHitbox(plr)
