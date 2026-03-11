@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 local Hitboxes = {}
+local LastEnabled = false
 
 --------------------------------------------------
 -- SAFE SETTINGS
@@ -17,12 +18,28 @@ local function getSettings()
 		return shared.HitboxSettings
 	end
 
-	-- fallback so script never crashes
 	return {
 		Enabled = false,
 		Visible = true,
 		Size = 5
 	}
+
+end
+
+--------------------------------------------------
+-- REMOVE HITBOX
+--------------------------------------------------
+
+local function removeHitbox(plr)
+
+	local data = Hitboxes[plr]
+
+	if data then
+		if data.folder then
+			data.folder:Destroy()
+		end
+		Hitboxes[plr] = nil
+	end
 
 end
 
@@ -46,11 +63,7 @@ local function createHitbox(plr)
 
 	if not root then return end
 
-	if Hitboxes[plr] then
-		if Hitboxes[plr].folder then
-			Hitboxes[plr].folder:Destroy()
-		end
-	end
+	removeHitbox(plr)
 
 	local folder = Instance.new("Folder")
 	folder.Name = "ExtraHitbox"
@@ -82,8 +95,8 @@ local function createHitbox(plr)
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(255,0,0)
 
-		part.Transparency = Settings.Visible and 0.4 or 1
 		part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+		part.Transparency = Settings.Visible and 0.4 or 1
 
 		part.Parent = folder
 
@@ -110,7 +123,29 @@ RunService.RenderStepped:Connect(function()
 
 	local Settings = getSettings()
 
+	--------------------------------------------------
+	-- HANDLE ENABLE / DISABLE
+	--------------------------------------------------
+
+	if Settings.Enabled ~= LastEnabled then
+
+		if not Settings.Enabled then
+
+			for plr,_ in pairs(Hitboxes) do
+				removeHitbox(plr)
+			end
+
+		end
+
+		LastEnabled = Settings.Enabled
+
+	end
+
 	if not Settings.Enabled then return end
+
+	--------------------------------------------------
+	-- UPDATE HITBOXES
+	--------------------------------------------------
 
 	for _,plr in pairs(Players:GetPlayers()) do
 
@@ -154,17 +189,9 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------
--- CLEANUP
+-- PLAYER CLEANUP
 --------------------------------------------------
 
 Players.PlayerRemoving:Connect(function(plr)
-
-	local data = Hitboxes[plr]
-
-	if data and data.folder then
-		data.folder:Destroy()
-	end
-
-	Hitboxes[plr] = nil
-
+	removeHitbox(plr)
 end)
