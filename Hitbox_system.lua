@@ -202,7 +202,7 @@ Players.PlayerRemoving:Connect(removeHitbox)
 -- RESPAWN SUPPORT
 --------------------------------------------------
 
-Players.PlayerAdded:Connect(function(plr)
+local function setupRespawn(plr)
 
 	plr.CharacterAdded:Connect(function()
 
@@ -216,4 +216,12 @@ Players.PlayerAdded:Connect(function(plr)
 
 	end)
 
-end)
+end
+
+-- existing players
+for _,plr in pairs(Players:GetPlayers()) do
+	setupRespawn(plr)
+end
+
+-- new players
+Players.PlayerAdded:Connect(setupRespawn)
