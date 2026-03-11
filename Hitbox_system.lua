@@ -20,8 +20,14 @@ local function createHitbox(plr)
 	local char = plr.Character
 	if not char then return end
 
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root then return end
+local root =
+	char:FindFirstChild("HumanoidRootPart")
+	or char:FindFirstChild("UpperTorso")
+	or char:FindFirstChild("Torso")
+	or char:FindFirstChild("LowerTorso")
+	or char:FindFirstChild("Head")
+
+if not root then return end
 
 	-- remove old
 	if Hitboxes[plr] then
@@ -93,7 +99,12 @@ RunService.RenderStepped:Connect(function()
 			local char = plr.Character
 			if not char then continue end
 
-			local root = char:FindFirstChild("HumanoidRootPart")
+local root =
+	char:FindFirstChild("HumanoidRootPart")
+	or char:FindFirstChild("UpperTorso")
+	or char:FindFirstChild("Torso")
+	or char:FindFirstChild("LowerTorso")
+	or char:FindFirstChild("Head")
 			if not root then continue end
 
 			-- create if missing
