@@ -28,40 +28,24 @@ local function createHitbox(plr)
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if not root then return end
 
-	if Hitboxes[plr] then
-		return
-	end
+	if Hitboxes[plr] then return end
 
 	local part = Instance.new("Part")
 	part.Name = "ExtraHitbox"
-	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-	part.Transparency = Settings.Visible and 0.4 or 1
-	part.Color = Color3.fromRGB(255,0,0)
-	part.Material = Enum.Material.Neon
+	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
 	part.CanQuery = true
-	part.Massless = true
-	part.Anchored = false
-	part.Parent = workspace
+	part.Transparency = Settings.Visible and 0.4 or 1
+	part.Color = Color3.fromRGB(255,0,0)
+	part.Material = Enum.Material.Neon
+	part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 
-	part.CFrame = root.CFrame
-
-	local att0 = Instance.new("Attachment", part)
-	local att1 = Instance.new("Attachment", root)
-
-	local align = Instance.new("AlignPosition")
-	align.Attachment0 = att0
-	align.Attachment1 = att1
-	align.RigidityEnabled = true
-	align.Responsiveness = 200
-	align.MaxForce = math.huge
-	align.Parent = part
+	part.Parent = char
 
 	Hitboxes[plr] = {
 		part = part,
-		align = align,
-		attachment = att1
+		root = root
 	}
 
 end
@@ -93,6 +77,7 @@ RunService.Heartbeat:Connect(function()
 
 			local part = data.part
 
+			part.CFrame = root.CFrame
 			part.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
 			part.Transparency = Settings.Visible and 0.4 or 1
 
@@ -113,10 +98,6 @@ local function removeHitbox(plr)
 
 	if data.part then
 		data.part:Destroy()
-	end
-
-	if data.attachment then
-		data.attachment:Destroy()
 	end
 
 	Hitboxes[plr] = nil
@@ -173,35 +154,27 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- CHARACTER RESPAWN FIX
+-- PLAYER CLEANUP
 --------------------------------------------------
 
-local function characterAdded(plr)
+Players.PlayerRemoving:Connect(function(plr)
+	removeHitbox(plr)
+end)
 
-	if plr == player then return end
-
-	task.wait(0.8)
-
-	if Enabled then
-		createHitbox(plr)
-	end
-
-end
-
-for _,plr in pairs(Players:GetPlayers()) do
-	plr.CharacterAdded:Connect(function()
-		characterAdded(plr)
-	end)
-end
+--------------------------------------------------
+-- RESPAWN SUPPORT
+--------------------------------------------------
 
 Players.PlayerAdded:Connect(function(plr)
 
 	plr.CharacterAdded:Connect(function()
-		characterAdded(plr)
+
+		task.wait(1)
+
+		if Enabled then
+			createHitbox(plr)
+		end
+
 	end)
 
-end)
-
-Players.PlayerRemoving:Connect(function(plr)
-	removeHitbox(plr)
 end)
