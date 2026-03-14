@@ -23,6 +23,10 @@ local CircleVisible = true
 local Prediction = 0.14
 local HeadOffset = Vector3.new(0,-0.19,0)
 
+------------------------------------------------
+
+local mmLoaded = false
+
 --------------------------------------------------
 -- ESP SETTINGS
 --------------------------------------------------
@@ -375,30 +379,24 @@ end)
 
 mmMenuButton.MouseButton1Click:Connect(function()
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
-local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
+    if mmLoaded then
+        return
+    end
 
-local Tab = Window:NewTab("Main")
+    mmLoaded = true
 
-local Section = Tab:NewSection("Step 1")
-Section:NewButton("Dupe Crossbows", "Execute this while in the select weapon menu", function()
+    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
+    local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
 
--- YOUR DUPE CODE HERE
+    local Tab = Window:NewTab("Main")
 
-end)
+    local Section = Tab:NewSection("Step 1")
 
-local Section = Tab:NewSection("Step 2")
-Section:NewButton("Minigun Crossbows", "Execute this ONCE", function()
+    Section:NewButton("Dupe Crossbows", "Execute this while in the select weapon menu", function()
 
--- YOUR MINIGUN CODE HERE
+        -- your dupe code here
 
-end)
-
-Section:NewLabel("Key Controls")
-Section:NewLabel("T: toggle minigun")
-Section:NewLabel("G: reload all crossbows")
-Section:NewLabel("C: shoot 3 at once")
-Section:NewLabel("V: shoot all at once")
+    end)
 
 end)
 
