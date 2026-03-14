@@ -231,10 +231,6 @@ hitboxTabButton.MouseButton1Click:Connect(function()
 	switchTab(hitboxPage)
 end)
 
-mmMenuButton.MouseButton1Click:Connect(function()
-	mmFrame.Visible = true
-end)
-
 switchTab(aimPage)
 
 --------------------------------------------------
@@ -340,6 +336,7 @@ hitboxSizeFrame.Parent = hitboxPage
 --------------------------------------------------
 
 local bowButton = createButton("Bow Mode : OFF")
+bowButton.Parent = hitboxPage
 
 --------------------------------------------------
 -- CLOSE BUTTON
@@ -679,7 +676,7 @@ bowIndicator.Parent = mainGui
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(1,0)
-corner.Parent = circle
+corner.Parent = bowIndicator
 
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 1
