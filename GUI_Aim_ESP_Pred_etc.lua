@@ -178,7 +178,7 @@ tabLayout.Parent = tabBar
 local function createTab(name)
 
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(0,100,1,0)
+	button.Size = UDim2.new(0.25,-10,1,0)
 	button.Text = name
 	button.TextSize = 18
 	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
@@ -254,6 +254,10 @@ end)
 
 hitboxTabButton.MouseButton1Click:Connect(function()
 	switchTab(hitboxPage)
+end)
+
+mmMenuButton.MouseButton1Click:Connect(function()
+	mmFrame.Visible = true
 end)
 
 switchTab(aimPage)
@@ -399,6 +403,7 @@ end)
 
 mmMenuButton.MouseButton1Click:Connect(function()
 
+	menuFrame.Visible = false
 	mmFrame.Visible = true
 
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
@@ -408,6 +413,7 @@ end)
 mmClose.MouseButton1Click:Connect(function()
 
 	mmFrame.Visible = false
+	menuFrame.Visible = true
 
 end)
 
