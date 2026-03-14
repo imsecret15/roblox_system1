@@ -385,18 +385,7 @@ mmMenuButton.MouseButton1Click:Connect(function()
 
     mmLoaded = true
 
-    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
-    local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
-
-    local Tab = Window:NewTab("Main")
-
-    local Section = Tab:NewSection("Step 1")
-
-    Section:NewButton("Dupe Crossbows", "Execute this while in the select weapon menu", function()
-
-        -- your dupe code here
-
-    end)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MM_Menu.lua"))()
 
 end)
 
