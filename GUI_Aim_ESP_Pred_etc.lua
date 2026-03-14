@@ -133,6 +133,40 @@ openCorner.Parent = openButton
 --------------------------------------------------
 
 local menuFrame = Instance.new("Frame")
+--------------------------------------------------
+-- TAB BAR
+--------------------------------------------------
+
+local tabBar = Instance.new("Frame")
+tabBar.Size = UDim2.new(1,0,0,40)
+tabBar.BackgroundTransparency = 1
+tabBar.Parent = menuFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0,10)
+tabLayout.Parent = tabBar
+
+local function createTab(name)
+
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0,100,1,0)
+	button.Text = name
+	button.TextSize = 18
+	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	button.TextColor3 = Color3.new(1,1,1)
+	button.Parent = tabBar
+
+	local corner = Instance.new("UICorner")
+	corner.Parent = button
+
+	return button
+end
+
+local aimTabButton = createTab("Aim")
+local visualsTabButton = createTab("Visuals")
+local hitboxTabButton = createTab("Hitbox")
+
 menuFrame.Size = UDim2.new(0,360,0,420)
 menuFrame.Position = UDim2.new(0,75,0.5,-210)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
@@ -146,21 +180,59 @@ menuCorner.Parent = menuFrame
 -- SCROLLING CONTAINER
 --------------------------------------------------
 
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-20,1,-20)
-scrollFrame.Position = UDim2.new(0,10,0,10)
-scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
-scrollFrame.ScrollBarThickness = 6
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.Parent = menuFrame
+--------------------------------------------------
+-- TAB PAGES
+--------------------------------------------------
 
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,10)
-layout.Parent = scrollFrame
+local function createPage()
 
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	local page = Instance.new("ScrollingFrame")
+	page.Size = UDim2.new(1,-20,1,-60)
+	page.Position = UDim2.new(0,10,0,50)
+	page.CanvasSize = UDim2.new(0,0,0,0)
+	page.ScrollBarThickness = 6
+	page.BackgroundTransparency = 1
+	page.Visible = false
+	page.Parent = menuFrame
+
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0,10)
+	layout.Parent = page
+
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		page.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	end)
+
+	return page
+end
+
+local aimPage = createPage()
+local visualsPage = createPage()
+local hitboxPage = createPage()
+
+local function switchTab(page)
+
+	aimPage.Visible = false
+	visualsPage.Visible = false
+	hitboxPage.Visible = false
+
+	page.Visible = true
+
+end
+
+aimTabButton.MouseButton1Click:Connect(function()
+	switchTab(aimPage)
 end)
+
+visualsTabButton.MouseButton1Click:Connect(function()
+	switchTab(visualsPage)
+end)
+
+hitboxTabButton.MouseButton1Click:Connect(function()
+	switchTab(hitboxPage)
+end)
+
+switchTab(aimPage)
 
 --------------------------------------------------
 -- BUTTON CREATOR FUNCTION
@@ -174,7 +246,7 @@ local function createButton(text)
 	button.TextSize = 18
 	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
 	button.TextColor3 = Color3.new(1,1,1)
-	button.Parent = scrollFrame
+	button.Parent = aimPage
 
 	local corner = Instance.new("UICorner")
 	corner.Parent = button
@@ -191,7 +263,7 @@ local function createSetting(labelText, defaultValue)
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(1,-10,0,45)
 	frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	frame.Parent = scrollFrame
+	frame.Parent = aimPage
 
 	local frameCorner = Instance.new("UICorner")
 	frameCorner.Parent = frame
@@ -227,6 +299,8 @@ end
 
 local espButton = createButton("ESP : OFF")
 local nameButton = createButton("Player Names : OFF")
+espButton.Parent = visualsPage
+nameButton.Parent = visualsPage
 local aimModeButton = createButton("Aim : Disabled")
 local aimPartButton = createButton("Aim Part : Head")
 local circleButton = createButton("Aim Circle : ON")
@@ -249,6 +323,9 @@ local circleSizeFrame, circleSizeBox =
 
 local hitboxButton = createButton("Hitbox : OFF")
 local hitboxVisibleButton = createButton("Hitbox Visible : ON")
+hitboxButton.Parent = hitboxPage
+hitboxVisibleButton.Parent = hitboxPage
+hitboxSizeFrame.Parent = hitboxPage
 
 local hitboxSizeFrame, hitboxSizeBox =
 	createSetting("Hitbox Size:", shared.HitboxSettings.Size)
@@ -788,6 +865,7 @@ RunService.RenderStepped:Connect(function()
 
 	if not lockedTarget then
 		lockedTarget = getClosestPlayer()
+		shared.AimTarget = lockedTarget
 
 		if not lockedTarget then
 			stroke.Color = Color3.fromRGB(255,255,255)
