@@ -323,12 +323,13 @@ local circleSizeFrame, circleSizeBox =
 
 local hitboxButton = createButton("Hitbox : OFF")
 local hitboxVisibleButton = createButton("Hitbox Visible : ON")
-hitboxButton.Parent = hitboxPage
-hitboxVisibleButton.Parent = hitboxPage
-hitboxSizeFrame.Parent = hitboxPage
 
 local hitboxSizeFrame, hitboxSizeBox =
 	createSetting("Hitbox Size:", shared.HitboxSettings.Size)
+
+hitboxButton.Parent = hitboxPage
+hitboxVisibleButton.Parent = hitboxPage
+hitboxSizeFrame.Parent = hitboxPage
 
 --------------------------------------------------
 -- BOW MODE
