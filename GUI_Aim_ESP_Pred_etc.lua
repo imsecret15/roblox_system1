@@ -110,6 +110,7 @@ end)
 
 local mainGui = Instance.new("ScreenGui")
 mainGui.ResetOnSpawn = false
+mainGui.Name = "ExploitMenu"
 mainGui.Parent = player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
@@ -133,6 +134,8 @@ openCorner.Parent = openButton
 --------------------------------------------------
 
 local menuFrame = Instance.new("Frame")
+menuFrame.Parent = mainGui
+
 --------------------------------------------------
 -- TAB BAR
 --------------------------------------------------
@@ -171,7 +174,6 @@ menuFrame.Size = UDim2.new(0,360,0,420)
 menuFrame.Position = UDim2.new(0,75,0.5,-210)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 menuFrame.Visible = false
-menuFrame.Parent = mainGui
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.Parent = menuFrame
