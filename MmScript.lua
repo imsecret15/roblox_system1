@@ -2644,4 +2644,43 @@ function Kavo.CreateLib(kavName, themeList)
     end  
     return Tabs
 end
+
+local Library = Kavo
+
+local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
+
+local Tab = Window:NewTab("Main")
+
+local Section = Tab:NewSection("Step 1")
+
+Section:NewButton("Dupe Crossbows", "Execute this while in weapon select menu", function()
+
+    local dupe = {}
+
+    for i=1,80 do table.insert(dupe,12) end
+
+    pcall(function()
+        settings().Network.IncomingReplicationLag = math.huge
+    end)
+
+    task.wait()
+
+    for i,v in pairs(dupe) do
+        game:GetService("ReplicatedStorage").Item:FireServer(v,"0:0:0:0")
+    end
+
+    task.wait(0.5)
+
+    pcall(function()
+        settings().Network.IncomingReplicationLag = 0
+    end)
+
+end)
+
+local Section2 = Tab:NewSection("Step 2")
+
+Section2:NewButton("Minigun Crossbows", "Enable minigun crossbows", function()
+    print("Minigun mode enabled")
+end)
+
 return Kavo
