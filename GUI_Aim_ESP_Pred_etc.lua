@@ -403,10 +403,15 @@ end)
 
 mmMenuButton.MouseButton1Click:Connect(function()
 
-	menuFrame.Visible = false
 	mmFrame.Visible = true
 
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
+	local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+	local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
+
+	local Tab = Window:NewTab("Main")
+	local Section = Tab:NewSection("Test")
+
+	Section:NewLabel("MM Menu Loaded")
 
 end)
 
