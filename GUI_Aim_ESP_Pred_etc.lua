@@ -196,7 +196,7 @@ local visualsTabButton = createTab("Visuals")
 local hitboxTabButton = createTab("Hitbox")
 local mmMenuButton = createTab("MM Menu")
 
-menuFrame.Size = UDim2.new(0,360,0,420)
+menuFrame.Size = UDim2.new(0,460,0,420)
 menuFrame.Position = UDim2.new(0,75,0.5,-210)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 menuFrame.Visible = false
