@@ -137,31 +137,6 @@ local menuFrame = Instance.new("Frame")
 menuFrame.Parent = mainGui
 
 --------------------------------------------------
--- MM MENU FRAME
---------------------------------------------------
-
-local mmFrame = Instance.new("Frame")
-mmFrame.Size = UDim2.new(0,500,0,300)
-mmFrame.Position = UDim2.new(0.5,-250,0.5,-150)
-mmFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-mmFrame.Visible = false
-mmFrame.Parent = mainGui
-
-local mmCorner = Instance.new("UICorner")
-mmCorner.Parent = mmFrame
-
-local mmClose = Instance.new("TextButton")
-mmClose.Size = UDim2.new(0,80,0,35)
-mmClose.Position = UDim2.new(1,-90,0,10)
-mmClose.Text = "Close"
-mmClose.BackgroundColor3 = Color3.fromRGB(50,50,50)
-mmClose.TextColor3 = Color3.new(1,1,1)
-mmClose.Parent = mmFrame
-
-local mmCloseCorner = Instance.new("UICorner")
-mmCloseCorner.Parent = mmClose
-
---------------------------------------------------
 -- TAB BAR
 --------------------------------------------------
 
