@@ -403,7 +403,30 @@ end)
 
 mmMenuButton.MouseButton1Click:Connect(function()
 
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/imsecret15/roblox_system1/main/MmScript.lua"))()
+local Window = Library.CreateLib("Mortem Metallum [Alpha]", "DarkTheme")
+
+local Tab = Window:NewTab("Main")
+
+local Section = Tab:NewSection("Step 1")
+Section:NewButton("Dupe Crossbows", "Execute this while in the select weapon menu", function()
+
+-- YOUR DUPE CODE HERE
+
+end)
+
+local Section = Tab:NewSection("Step 2")
+Section:NewButton("Minigun Crossbows", "Execute this ONCE", function()
+
+-- YOUR MINIGUN CODE HERE
+
+end)
+
+Section:NewLabel("Key Controls")
+Section:NewLabel("T: toggle minigun")
+Section:NewLabel("G: reload all crossbows")
+Section:NewLabel("C: shoot 3 at once")
+Section:NewLabel("V: shoot all at once")
 
 end)
 
