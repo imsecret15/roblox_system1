@@ -299,12 +299,13 @@ end
 
 local espButton = createButton("ESP : OFF")
 local nameButton = createButton("Player Names : OFF")
-espButton.Parent = visualsPage
-nameButton.Parent = visualsPage
 local aimModeButton = createButton("Aim : Disabled")
 local aimPartButton = createButton("Aim Part : Head")
 local circleButton = createButton("Aim Circle : ON")
 
+-- move ESP buttons to visuals tab
+espButton.Parent = visualsPage
+nameButton.Parent = visualsPage
 --------------------------------------------------
 -- SETTINGS
 --------------------------------------------------
